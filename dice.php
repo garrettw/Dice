@@ -65,23 +65,16 @@ class Dice
                     if ($rule->shared):
                         if ($constructor):
                             try {
-                                $this->instances[$component] =
-                                    $object = 
-                                        $class->newInstanceWithoutConstructor()
-                                ;
+                                $object = $class->newInstanceWithoutConstructor();
                                 $constructor->invokeArgs($object, $params($args));
                             } catch (\ReflectionException $r) {
-                                $this->instances[$component] =
-                                    $object =
-                                        $class->newInstanceArgs($params($args))
-                                ;
+                                $object = $class->newInstanceArgs($params($args));
                             }
                         else:
-                            $this->instances[$component] =
-                                $object =
-                                    $class->newInstanceWithoutConstructor()
-                            ;
+                            $object = $class->newInstanceWithoutConstructor();
                         endif;
+                        
+                        $this->instances[$component] = $object;
                     else:
                         $object = $params ?
                             $class->newInstanceArgs($params($args))
