@@ -45,10 +45,11 @@ class Dice
         
     public function create($component, array $args = [], $forceNewInstance = false)
     {
+        // early exits
         if (!$forceNewInstance && isset($this->instances[$component])):
             return $this->instances[$component];
         endif;
-        
+            
         if (!isset($this->cache[$component])):
             $rule = $this->getRule($component);
             $class = new \ReflectionClass(
@@ -62,16 +63,24 @@ class Dice
                 use ($component, $rule, $class, $constructor, $params)
                 {
                     if ($rule->shared):
-                        $internal = $constructor
-                                    && end(($class->getMethods()))->isInternal();
-                        $this->instances[$component] = 
-                            $object = 
-                                ($internal && $constructor) ?
-                                    $class->newInstanceArgs($params($args))
-                                    : $class->newInstanceWithoutConstructor()
-                        ;
-                        if ($constructor && !$internal):
-                            $constructor->invokeArgs($object, $params($args));
+                        if ($constructor):
+                            try {
+                                $this->instances[$component] =
+                                    $object = 
+                                        $class->newInstanceWithoutConstructor()
+                                ;
+                                $constructor->invokeArgs($object, $params($args));
+                            } catch (\ReflectionException $r) {
+                                $this->instances[$component] =
+                                    $object =
+                                        $class->newInstanceArgs($params($args))
+                                ;
+                            }
+                        else:
+                            $this->instances[$component] =
+                                $object =
+                                    $class->newInstanceWithoutConstructor()
+                            ;
                         endif;
                     else:
                         $object = $params ?
@@ -149,7 +158,7 @@ class Dice
             
             foreach ($paramClasses as $class):
                 if (!empty($args)):
-                    for ($i = 0; $i < count($args); $i++):
+                    for ($i = 0; $i < count($args); ++$i):
                         if ($class && $args[$i] instanceof $class):
                             $parameters[] = array_splice($args, $i, 1)[0];
                             continue 2;
