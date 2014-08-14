@@ -45,16 +45,13 @@ class Dice
         
     public function create($component, array $args = [], $forceNewInstance = false)
     {
-        // early exits
         if (!$forceNewInstance && isset($this->instances[$component])):
             return $this->instances[$component];
         endif;
             
         if (!isset($this->cache[$component])):
             $rule = $this->getRule($component);
-            $class = new \ReflectionClass(
-                empty($rule->instanceOf) ? $component : $rule->instanceOf
-            );
+            $class = new \ReflectionClass($rule->instanceOf ?: $component);
             $constructor = $class->getConstructor();			
             $params = $constructor ? $this->getParams($constructor, $rule) : null;
             
