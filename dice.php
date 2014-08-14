@@ -125,14 +125,12 @@ class Dice
         
     private function getParams(\ReflectionMethod $method, Rule $rule)
     {	
-        $subs = empty($rule->substitutions) ? null : $rule->substitutions;
         $paramClasses = [];
-        
         foreach ($method->getParameters() as $param):
             $paramClasses[] = $param->getClass() ? $param->getClass()->name : null;
         endforeach;
         
-        return function($args) use ($paramClasses, $rule, $subs) {
+        return function($args) use ($paramClasses, $rule) {
             $share = empty($rule->shareInstances) ?
                 []
                 : array_map([$this, 'create'], $rule->shareInstances)
@@ -144,6 +142,8 @@ class Dice
                     $share
                 );
             endif;
+            
+            $subs = $rule->substitutions ?: null;
             $parameters = [];
             
             foreach ($paramClasses as $class):
