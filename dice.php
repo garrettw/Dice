@@ -176,7 +176,6 @@ class Dice
                 elseif (!empty($args)):
                     $parameters[] = array_shift($args);
                 endif;
-            }
             endforeach;
             
             return $parameters;
