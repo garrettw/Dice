@@ -49,7 +49,7 @@ class Dice
             return $this->instances[$component];
         endif;
             
-        if (!isset($this->cache[$component])):
+        if (empty($this->cache[$component])):
             $rule = $this->getRule($component);
             $class = new \ReflectionClass($rule->instanceOf ?: $component);
             $constructor = $class->getConstructor();			
@@ -156,20 +156,17 @@ class Dice
                     endfor;
                 endif;
                 
-                if (!empty($subs) && isset($subs[$class])):
+                if ($subs && isset($subs[$class])):
                     $parameters[] = is_string($subs[$class]) ?
                         $this->create($subs[$class])
                         : $this->expand($subs[$class])
                     ;
-                elseif (!empty($class)):
+                elseif ($class):
                     $parameters[] = $this->create(
                         $class,
                         $share,
                         (!empty($rule->newInstances) 
-                            && in_array(
-                                strtolower($class),
-                                array_map('strtolower', $rule->newInstances)
-                            )
+                            && in_array($class, $rule->newInstances)
                         )
                     );
                 elseif (!empty($args)):
