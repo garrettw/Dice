@@ -191,6 +191,15 @@ class Rule
     public $newInstances    = [];
     public $call            = [];
     public $shareInstances  = [];
+    
+    public function __construct($params = [])
+    {
+        if (is_array($params) && count($params)) {
+            foreach ($params as $name => $val) {
+                $this->$name = $val;
+            }
+        }
+    }
 }
 
 class Instance
