@@ -150,7 +150,8 @@ class Dice
             
             foreach ($paramClasses as $class):
                 if (!empty($args)):
-                    for ($i = 0; $i < count($args); ++$i):
+                    $numargs = count($args);
+                    for ($i = 0; $i < $numargs; ++$i):
                         if ($class && $args[$i] instanceof $class):
                             $parameters[] = array_splice($args, $i, 1)[0];
                             continue 2;
