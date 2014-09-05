@@ -50,57 +50,57 @@ class Dice
             return $this->instances[$component];
         endif;
             
-        if (empty($this->cache[$component])):
-            $rule = $this->getRule($component);
-            $class = new \ReflectionClass($rule->instanceOf ?: $component);
-            $constructor = $class->getConstructor();			
-            $params = $constructor ? $this->getParams($constructor, $rule) : null;
-            
-            $this->cache[$component] = 
-                function($args, $forceNewInstance)
-                use ($component, $rule, $class, $constructor, $params)
-                {
-                    if ($rule->shared):
-                        if ($constructor):
-                            try {
-                                $object = $class->newInstanceWithoutConstructor();
-                                $constructor->invokeArgs($object, $params($args));
-                            } catch (\ReflectionException $r) {
-                                $object = $class->newInstanceArgs($params($args));
-                            }
-                        else:
+        if (!empty($this->cache[$component])):
+            return $this->cache[$component]($args, $forceNewInstance);
+        endif;
+        
+        $rule = $this->getRule($component);
+        $class = new \ReflectionClass($rule->instanceOf ?: $component);
+        $constructor = $class->getConstructor();			
+        $params = $constructor ? $this->getParams($constructor, $rule) : null;
+        
+        $this->cache[$component] = 
+            function($args, $forceNewInstance)
+            use ($component, $rule, $class, $constructor, $params)
+            {
+                if ($rule->shared):
+                    if ($constructor):
+                        try {
                             $object = $class->newInstanceWithoutConstructor();
-                        endif;
-                        
-                        $this->instances[$component] = $object;
+                            $constructor->invokeArgs($object, $params($args));
+                        } catch (\ReflectionException $r) {
+                            $object = $class->newInstanceArgs($params($args));
+                        }
                     else:
-                        $object = $params ?
-                            $class->newInstanceArgs($params($args))
-                            : new $class->name
-                        ;
+                        $object = $class->newInstanceWithoutConstructor();
                     endif;
                     
-                    if (!empty($rule->call)):
-                        foreach ($rule->call as $call):
-                            $class->getMethod($call[0])
-                                ->invokeArgs($object,
-                                    call_user_func(
-                                        $this->getParams(
-                                            $class->getMethod(
-                                                $this->expand($call[0])
-                                            ),
-                                            new Rule
-                                        ),
-                                        $call[1]
-                                    )
+                    $this->instances[$component] = $object;
+                else:
+                    $object = $params ?
+                        $class->newInstanceArgs($params($args))
+                        : new $class->name
+                    ;
+                endif;
+                
+                if (!empty($rule->call)):
+                    foreach ($rule->call as $call):
+                        $class->getMethod($call[0])
+                            ->invokeArgs($object,
+                                call_user_func(
+                                    $this->getParams(
+                                        $class->getMethod($this->expand($call[0])),
+                                        new Rule
+                                    ),
+                                    $call[1]
                                 )
-                            ;
-                        endforeach;
-                    endif;
-                    return $object;
-                }
-            ;
-        endif;
+                            )
+                        ;
+                    endforeach;
+                endif;
+                return $object;
+            }
+        ;
         return $this->cache[$component]($args, $forceNewInstance);
     }
     
