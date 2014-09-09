@@ -1,6 +1,6 @@
 {
     "name": "garrettw/dice",
-    "description": "A minimalist Dependency injection container (DIC) for PHP. Please note: This branch is only compatible with PHP5.4.",
+    "description": "My version of Dice, a minimalist Dependency Injection Container for PHP. Fully compatible with upstream. My additions: PSR-4 compatibility, Rule class constructor can set properties, beautified code.",
     "license": "BSD-2-Clause",
     "homepage": "http://r.je/dice.html",
     "keywords": ["Dependency injection", "DI", "Dependency injection container", "DIC", "ioc"],
