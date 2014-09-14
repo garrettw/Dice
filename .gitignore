@@ -165,3 +165,5 @@ pip-log.txt
 
 #phpunit bootstrap
 tests/.bootstrap.php
+
+nbproject
