@@ -86,8 +86,7 @@ class Dice
                             ->invokeArgs($object,
                                 call_user_func(
                                     $this->getParams($class->getMethod($call[0]), new Rule),
-                                    $this->expand($call[1])))
-                        ;
+                                    $this->expand($call[1])));
                     endforeach;
                 endif;
                 return $object;
@@ -101,8 +100,7 @@ class Dice
         if (is_array($param)):
             return array_map(
                 function($p) use($share) { return $this->expand($p, $share); },
-                $param)
-            ;
+                $param);
         endif;
         
         if ($param instanceof Instance):
@@ -126,16 +124,14 @@ class Dice
         endforeach;
         
         return function($args) use ($paramClasses, $rule, $subs) {
-            $share = $rule->shareInstances ?
-                array_map([$this, 'create'], $rule->shareInstances)
-                : []
-            ;
+            $share = $rule->shareInstances
+                ? array_map([$this, 'create'], $rule->shareInstances)
+                : [];
             if ($share || $rule->constructParams):
                 $args = array_merge(
                     $args, 
                     $this->expand($rule->constructParams, $share),
-                    $share)
-                ;
+                    $share);
             endif;
             
             $parameters = [];
@@ -152,16 +148,14 @@ class Dice
                 endif;
                 
                 if ($subs && isset($subs[$class])):
-                    $parameters[] = is_string($subs[$class]) ?
-                        $this->create($subs[$class])
-                        : $this->expand($subs[$class])
-                    ;
+                    $parameters[] = is_string($subs[$class])
+                        ? $this->create($subs[$class])
+                        : $this->expand($subs[$class]);
                 elseif ($class):
                     $parameters[] = $this->create(
                         $class,
                         $share,
-                        ($rule->newInstances && in_array($class, $rule->newInstances)))
-                    ;
+                        ($rule->newInstances && in_array($class, $rule->newInstances)));
                 elseif ($args):
                     $parameters[] = array_shift($args);
                 endif;
