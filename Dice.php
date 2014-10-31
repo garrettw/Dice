@@ -111,7 +111,7 @@ class Dice
         endif;
 
         if ($param instanceof Instance):
-            if ($param->name instanceof \Closure):
+            if (is_callable($param->name)):
                 return call_user_func($param->name, $this, $share);
             else:
                 return $this->create($param->name, $share);
