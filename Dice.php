@@ -1,12 +1,12 @@
 <?php
 
 /**
- * @description	Dice - A minimal Dependency Injection Container for PHP
- * @author		Tom Butler tom@r.je
+ * @description Dice - A minimal Dependency Injection Container for PHP
+ * @author      Tom Butler tom@r.je
  * @author      Garrett Whitehorn http://garrettw.net/
- * @copyright	2012-2014 Tom Butler <tom@r.je> | http://r.je/dice.html
- * @license		http://www.opensource.org/licenses/bsd-license.php  BSD License
- * @version		1.3.1
+ * @copyright   2012-2014 Tom Butler <tom@r.je> | http://r.je/dice.html
+ * @license     http://www.opensource.org/licenses/bsd-license.php  BSD License
+ * @version     1.3.1
  */
 
 namespace Dice;
@@ -92,7 +92,7 @@ class Dice
                         $class->getMethod($call[0])
                             ->invokeArgs($object,
                                 call_user_func(
-                                    $this->getParams($class->getMethod($call[0]), new Rule),
+                                    $this->getParams($class->getMethod($call[0]), $rule),
                                     $this->expand($call[1])));
                     endforeach;
                 endif;
