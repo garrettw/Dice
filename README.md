@@ -28,7 +28,7 @@ Simple example:
 <?php
 class A {
 	public $b;
-	
+
 	public function __construct(B $b) {
 		$this->b = $b;
 	}
@@ -70,7 +70,7 @@ Updates
 06/06/2014
 * Added support for cyclic references ( https://github.com/TomBZombie/Dice/issues/7 ). Please note this is poor design but this fix will stop the infinite loop this design creates.
 
-27/03/2013
+27/03/2014
 * Removed assign() method as this duplicated functionality available using $rule->shared
 * Removed $callback argument in $dice->create() as the only real use for this feature can be better achieved using $rule->shareInstances
 * Tidied up code, removing unused/undocumented features. Dice is now even more lightweight and faster.
@@ -83,7 +83,7 @@ Updates
 * Added a JSON loader + test case
 * Added all test cases to a test suite
 * Moved to PHP5.4 array syntax. A PHP5.3 compatible version is now available in the PHP5.3 branch.
-* Fixed an issue where using named instances would trigger the autoloader with an invalid class name every time a class was created 
+* Fixed an issue where using named instances would trigger the autoloader with an invalid class name every time a class was created
 
 
 28/02/2014

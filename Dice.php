@@ -6,7 +6,7 @@
  * @author      Garrett Whitehorn http://garrettw.net/
  * @copyright   2012-2014 Tom Butler <tom@r.je> | http://r.je/dice.html
  * @license     http://www.opensource.org/licenses/bsd-license.php  BSD License
- * @version     1.3.1
+ * @version     1.3.2
  */
 
 namespace Dice;
@@ -26,14 +26,14 @@ class Dice
 
     public function addRule($name, Rule $rule)
     {
-        $this->rules[ltrim($name, '\\')] = $rule;
+        $this->rules[ltrim(strtolower($name), '\\')] = $rule;
     }
 
     public function getRule($name)
     {
         // first, check for exact match
-        if (isset($this->rules[ltrim($name, '\\')])):
-            return $this->rules[ltrim($name, '\\')];
+        if (isset($this->rules[strtolower(ltrim($name, '\\'))])):
+            return $this->rules[strtolower(ltrim($name, '\\'))];
         endif;
 
         // next, look for a rule where:
@@ -67,7 +67,7 @@ class Dice
         $params = $constructor ? $this->getParams($constructor, $rule) : null;
 
         $this->cache[$component] =
-            function($args, $forceNewInstance)
+            function($args)
             use ($component, $rule, $class, $constructor, $params)
             {
                 if ($rule->shared):
@@ -99,7 +99,7 @@ class Dice
                 return $object;
             }
         ;
-        return $this->cache[$component]($args, $forceNewInstance);
+        return $this->cache[$component]($args);
     } // public function create($component, array $args = [], $forceNewInstance = false)
 
     private function expand($param, array $share = [])
