@@ -127,7 +127,10 @@ class Dice
         $paramClasses = [];
 
         foreach ($method->getParameters() as $param):
-            $paramClasses[] = $param->getClass() ? $param->getClass()->name : null;
+            $paramClasses[] = [
+                $param->getClass() ? $param->getClass()->name : null,
+                $param->allowsNull(),
+            ];
         endforeach;
 
         return function($args) use ($paramClasses, $rule, $subs) {
@@ -143,21 +146,19 @@ class Dice
 
             $parameters = [];
 
-            foreach ($paramClasses as $class):
+            foreach ($paramClasses as list($class, $allowsNull)):
                 if ($args):
                     $numargs = count($args);
                     for ($i = 0; $i < $numargs; ++$i):
-                        if ($class && $args[$i] instanceof $class):
+                        if ($class && $args[$i] instanceof $class || !$args[$i] && $allowsNull):
                             $parameters[] = array_splice($args, $i, 1)[0];
                             continue 2;
                         endif;
                     endfor;
                 endif;
 
-                if ($subs && isset($subs[$class])):
-                    $parameters[] = is_string($subs[$class])
-                        ? $this->create($subs[$class])
-                        : $this->expand($subs[$class]);
+                if ($subs && array_key_exists($class, $subs)):
+                    $parameters[] = $this->expand($subs[$class]);
                 elseif ($class):
                     $parameters[] = $this->create(
                         $class,
