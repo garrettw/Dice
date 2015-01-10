@@ -51,14 +51,15 @@ class Dice
         return isset($this->rules['*']) ? $this->rules['*'] : new Rule;
     } // public function getRule($name)
 
-    public function create($component, array $args = [], $forceNewInstance = false)
+    public function create($component, array $args = [],
+                           $forceNewInstance = false, array $share = [])
     {
         if (!$forceNewInstance && isset($this->instances[$component])):
             return $this->instances[$component];
         endif;
 
         if (!empty($this->cache[$component])):
-            return $this->cache[$component]($args, $forceNewInstance);
+            return $this->cache[$component]($args);
         endif;
 
         $rule = $this->getRule($component);
@@ -68,15 +69,15 @@ class Dice
 
         $this->cache[$component] =
             function($args)
-            use ($component, $rule, $class, $constructor, $params)
+            use ($component, $rule, $class, $constructor, $params, $share)
             {
                 if ($rule->shared):
                     if ($constructor):
                         try {
                             $object = $class->newInstanceWithoutConstructor();
-                            $constructor->invokeArgs($object, $params($args));
+                            $constructor->invokeArgs($object, $params($args, $share));
                         } catch (\ReflectionException $r) {
-                            $object = $class->newInstanceArgs($params($args));
+                            $object = $class->newInstanceArgs($params($args, $share));
                         }
                     else:
                         $object = $class->newInstanceWithoutConstructor();
@@ -84,7 +85,7 @@ class Dice
 
                     $this->instances[$component] = $object;
                 else:
-                    $object = $params ? $class->newInstanceArgs($params($args)) : new $class->name;
+                    $object = $params ? $class->newInstanceArgs($params($args, $share)) : new $class->name;
                 endif;
 
                 if ($rule->call):
@@ -100,7 +101,7 @@ class Dice
             }
         ;
         return $this->cache[$component]($args);
-    } // public function create($component, array $args = [], $forceNewInstance = false)
+    } // public function create($component, array $args = [], $forceNewInstance = false, array $share = [])
 
     private function expand($param, array $share = [])
     {
@@ -114,7 +115,7 @@ class Dice
             if (is_callable($param->name)):
                 return call_user_func($param->name, $this, $share);
             else:
-                return $this->create($param->name, $share);
+                return $this->create($param->name, $share, false, $share);
             endif;
         endif;
 
@@ -123,20 +124,23 @@ class Dice
 
     private function getParams(\ReflectionMethod $method, Rule $rule)
     {
-        $subs = $rule->substitutions ?: [];
-        $paramClasses = [];
-
+        $paramInfo = [];
         foreach ($method->getParameters() as $param):
-            $paramClasses[] = [
-                $param->getClass() ? $param->getClass()->name : null,
+            $class = ($class = $param->getClass()) ? $class->name : null;
+            $paramInfo[] = [
+                $class,
                 $param->allowsNull(),
+                array_key_exists($class, $rule->substitutions),
+                in_array($class, $rule->newInstances)
             ];
         endforeach;
 
-        return function($args) use ($paramClasses, $rule, $subs) {
-            $share = $rule->shareInstances
-                ? array_map([$this, 'create'], $rule->shareInstances)
-                : [];
+        return function($args, $share = []) use ($paramInfo, $rule) {
+            if ($rule->shareInstances):
+                $share = array_merge($share,
+                                     array_map([$this, 'create'], $rule->shareInstances));
+            endif;
+
             if ($share || $rule->constructParams):
                 $args = array_merge(
                     $args,
@@ -146,7 +150,7 @@ class Dice
 
             $parameters = [];
 
-            foreach ($paramClasses as list($class, $allowsNull)):
+            foreach ($paramInfo as list($class, $allowsNull, $sub, $new)):
                 if ($args):
                     $numargs = count($args);
                     for ($i = 0; $i < $numargs; ++$i):
@@ -157,15 +161,12 @@ class Dice
                     endfor;
                 endif;
 
-                if ($subs && array_key_exists($class, $subs)):
-                    $parameters[] = $this->expand($subs[$class]);
-                elseif ($class):
-                    $parameters[] = $this->create(
-                        $class,
-                        $share,
-                        ($rule->newInstances && in_array($class, $rule->newInstances)));
+                if ($class):
+                    $parameters[] = $sub
+                        ? $this->expand($rule->substitutions[$class], $share)
+                        : $this->create($class, $share, $new, $share);
                 elseif ($args):
-                    $parameters[] = array_shift($args);
+                    $parameters[] = $this->expand(array_shift($args));
                 endif;
             endforeach;
 
