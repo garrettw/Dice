@@ -85,16 +85,20 @@ class Dice
 
                     $this->instances[$component] = $object;
                 else:
-                    $object = $params ? $class->newInstanceArgs($params($args, $share)) : new $class->name;
+                    $object = $params
+                        ? $class->newInstanceArgs($params($args, $share))
+                        : new $class->name;
                 endif;
 
                 if ($rule->call):
                     foreach ($rule->call as $call):
-                        $class->getMethod($call[0])
-                            ->invokeArgs($object,
-                                call_user_func(
-                                    $this->getParams($class->getMethod($call[0]), $rule),
-                                    $this->expand($call[1])));
+                        $class->getMethod($call[0])->invokeArgs(
+                            $object,
+                            call_user_func(
+                                $this->getParams($class->getMethod($call[0]), $rule),
+                                $this->expand($call[1])
+                            )
+                        );
                     endforeach;
                 endif;
                 return $object;
@@ -108,7 +112,8 @@ class Dice
         if (is_array($param)):
             return array_map(
                 function($p) use($share) { return $this->expand($p, $share); },
-                $param);
+                $param
+            );
         endif;
 
         if ($param instanceof Instance):
@@ -131,21 +136,24 @@ class Dice
                 $class,
                 $param->allowsNull(),
                 array_key_exists($class, $rule->substitutions),
-                in_array($class, $rule->newInstances)
+                in_array($class, $rule->newInstances),
             ];
         endforeach;
 
         return function($args, $share = []) use ($paramInfo, $rule) {
             if ($rule->shareInstances):
-                $share = array_merge($share,
-                                     array_map([$this, 'create'], $rule->shareInstances));
+                $share = array_merge(
+                    $share,
+                    array_map([$this, 'create'], $rule->shareInstances)
+                );
             endif;
 
             if ($share || $rule->constructParams):
                 $args = array_merge(
                     $args,
                     $this->expand($rule->constructParams, $share),
-                    $share);
+                    $share
+                );
             endif;
 
             $parameters = [];
