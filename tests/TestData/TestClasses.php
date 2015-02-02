@@ -1,5 +1,4 @@
-
-<?php 
+<?php
 /* @description 		Dice - A minimal Dependency Injection Container for PHP
  * @author				Tom Butler tom@r.je
 * @copyright			2012-2014 Tom Butler <tom@r.je>
@@ -15,7 +14,7 @@ class NoConstructor {
 
 class CyclicA {
 	public $b;
-	
+
 	public function __construct(CyclicB $b) {
 		$this->b = $b;
 	}
@@ -23,7 +22,7 @@ class CyclicA {
 
 class CyclicB {
 	public $a;
-	
+
 	public function __construct(CyclicA $a) {
 		$this->a = $a;
 	}
@@ -54,7 +53,7 @@ class Baz77 {
 
 class Shared {
 	public $uniq;
-	
+
 	public function __construct() {
 		$this->uniq = uniqid();
 	}
@@ -63,26 +62,36 @@ class Shared {
 class TestSharedInstancesTop {
 	public $share1;
 	public $share2;
-	
+
 	public function __construct(SharedInstanceTest1 $share1, SharedInstanceTest2 $share2) {
 		$this->share1 = $share1;
 		$this->share2 = $share2;
-	}	
+	}
 }
 
 
 class MethodWithDefaultValue {
 	public $a;
 	public $foo;
-	
+
 	public function __construct(A $a, $foo = 'bar') {
 		$this->a = $a;
 		$this->foo = $foo;
 	}
 }
 
+class MethodWithDefaultNull {
+	public $a;
+	public $b;
+	public function __construct(A $a, B $b = null) {
+		$this->a = $a;
+		$this->b = $b;
+	}
+}
+
+
 class MyDirectoryIterator extends DirectoryIterator {
-	
+
 }
 
 
@@ -94,9 +103,9 @@ class MyDirectoryIterator2 extends DirectoryIterator {
 
 class SharedInstanceTest1 {
 	public $shared;
-	
+
 	public function __construct(Shared $shared) {
-		$this->shared = $shared;		
+		$this->shared = $shared;
 	}
 }
 
@@ -111,7 +120,7 @@ class SharedInstanceTest2 {
 
 class TestCall {
 	public $isCalled = false;
-	
+
 	public function callMe() {
 		$this->isCalled = true;
 	}
@@ -140,7 +149,7 @@ class TestCall3 {
 class HasTwoSameDependencies {
 	public $y2a;
 	public $y2b;
-	
+
 	public function __construct(Y2 $y2a, Y2 $y2b) {
 		$this->y2a = $y2a;
 		$this->y2b = $y2b;
@@ -149,7 +158,7 @@ class HasTwoSameDependencies {
 
 class Y1 {
 	public $y2;
-	
+
 	public function __construct(Y2 $y2) {
 		$this->y2 = $y2;
 	}
@@ -157,15 +166,15 @@ class Y1 {
 
 
 class Y2 {
-	public $name; 
-	
+	public $name;
+
 	public function __construct($name) {
 		$this->name = $name;
 	}
 }
 
 class Y3 extends Y2 {
-	
+
 }
 class Z {
 	public $y1;
@@ -187,12 +196,12 @@ class BestMatch {
 	public $a;
 	public $string;
 	public $b;
-	
+
 	public function __construct($string, A $a, B $b) {
 		$this->a = $a;
 		$this->string = $string;
 		$this->b = $b;
-	}	
+	}
 }
 
 
@@ -236,6 +245,31 @@ class A3 {
 		$this->c = $c;
 	}
 }
+
+class A4 {
+	public $m1;
+	public $m2;
+	public function __construct(M1 $m1, M2 $m2) {
+		$this->m1 = $m1;
+		$this->m2 = $m2;
+	}
+}
+
+class M1 {
+	public $f;
+	public function __construct(F $f) {
+		$this->f = $f;
+	}
+}
+
+class M2 {
+	public $e;
+	public function __construct(E $e) {
+		$this->e = $e;
+	}
+}
+
+
 class A {
 	public $b;
 
@@ -306,4 +340,13 @@ interface interfaceTest {}
 
 class InterfaceTestClass implements interfaceTest {
 
+}
+
+
+trait MyTrait {
+	public function foo() {}
+}
+
+class MyDirectoryIteratorWithTrait extends DirectoryIterator {
+	use MyTrait;
 }

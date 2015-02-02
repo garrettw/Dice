@@ -20,7 +20,7 @@ Project Goals
 Installation
 ------------
 
-Just include the lightweight dice.php in your project and it's usable without any further configuration:
+Just include the lightweight `Dice.php` in your project and it's usable without any further configuration:
 
 Simple example:
 
@@ -38,7 +38,7 @@ class B {
 
 }
 
-require_once 'dice.php';
+require_once 'Dice.php';
 $dice = new \Dice\Dice;
 
 $a = $dice->create('A');
