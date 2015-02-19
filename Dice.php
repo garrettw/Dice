@@ -162,7 +162,7 @@ class Dice
                 if ($args):
                     $numargs = count($args);
                     for ($i = 0; $i < $numargs; ++$i):
-                        if ($class && $args[$i] instanceof $class || !$args[$i] && $allowsNull):
+                        if ($class && $args[$i] instanceof $class || ($args[$i] === null && $allowsNull)):
                             $parameters[] = array_splice($args, $i, 1)[0];
                             continue 2;
                         endif;
