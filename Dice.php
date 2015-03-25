@@ -148,8 +148,9 @@ class Dice
                 );
             endif;
 
+            $mergedArgs = $args;
             if ($share || $rule->constructParams):
-                $args = array_merge(
+                $mergedArgs = array_merge(
                     $args,
                     $this->expand($rule->constructParams, $share),
                     $share
@@ -159,11 +160,14 @@ class Dice
             $parameters = [];
 
             foreach ($paramInfo as list($class, $allowsNull, $sub, $new)):
-                if ($args):
-                    $numargs = count($args);
+                if ($mergedArgs):
+                    $numargs = count($mergedArgs);
                     for ($i = 0; $i < $numargs; ++$i):
-                        if ($class && $args[$i] instanceof $class || ($args[$i] === null && $allowsNull)):
-                            $parameters[] = array_splice($args, $i, 1)[0];
+                        if ($class
+                            && $mergedArgs[$i] instanceof $class
+                            || ($mergedArgs[$i] === null && $allowsNull)
+                        ):
+                            $parameters[] = array_splice($mergedArgs, $i, 1)[0];
                             continue 2;
                         endif;
                     endfor;
@@ -173,8 +177,8 @@ class Dice
                     $parameters[] = $sub
                         ? $this->expand($rule->substitutions[$class], $share)
                         : $this->create($class, $share, $new, $share);
-                elseif ($args):
-                    $parameters[] = $this->expand(array_shift($args));
+                elseif ($mergedArgs):
+                    $parameters[] = $this->expand(array_shift($mergedArgs));
                 endif;
             endforeach;
 
