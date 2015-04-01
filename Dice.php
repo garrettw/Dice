@@ -68,8 +68,8 @@ class Dice
         $params = $constructor ? $this->getParams($constructor, $rule) : null;
 
         $this->cache[$component] =
-            function($args)
-            use ($component, $rule, $class, $constructor, $params, $share)
+            function($args, $share)
+            use ($component, $rule, $class, $constructor, $params)
             {
                 if ($rule->shared):
                     if ($constructor):
@@ -104,7 +104,7 @@ class Dice
                 return $object;
             }
         ;
-        return $this->cache[$component]($args);
+        return $this->cache[$component]($args, $share);
     } // public function create($component, array $args = [], $forceNewInstance = false, array $share = [])
 
     private function expand($param, array $share = [])
@@ -120,7 +120,7 @@ class Dice
             if (is_callable($param->name)):
                 return call_user_func($param->name, $this, $share);
             else:
-                return $this->create($param->name, $share, false, $share);
+                return $this->create($param->name, [], false, $share);
             endif;
         endif;
 
@@ -148,26 +148,24 @@ class Dice
                 );
             endif;
 
-            $mergedArgs = $args;
             if ($share || $rule->constructParams):
-                $mergedArgs = array_merge(
-                    $args,
-                    $this->expand($rule->constructParams, $share),
-                    $share
+                $args = array_merge($args,
+                    $this->expand($rule->constructParams, $share), $share
                 );
             endif;
 
             $parameters = [];
 
             foreach ($paramInfo as list($class, $allowsNull, $sub, $new)):
-                if ($mergedArgs):
-                    $numargs = count($mergedArgs);
+                if ($args):
+                    $numargs = count($args);
                     for ($i = 0; $i < $numargs; ++$i):
                         if ($class
-                            && $mergedArgs[$i] instanceof $class
-                            || ($mergedArgs[$i] === null && $allowsNull)
+                            && $args[$i] instanceof $class
+                            || !$args[$i]
+                            && $allowsNull
                         ):
-                            $parameters[] = array_splice($mergedArgs, $i, 1)[0];
+                            $parameters[] = array_splice($args, $i, 1)[0];
                             continue 2;
                         endif;
                     endfor;
@@ -176,9 +174,9 @@ class Dice
                 if ($class):
                     $parameters[] = $sub
                         ? $this->expand($rule->substitutions[$class], $share)
-                        : $this->create($class, $share, $new, $share);
-                elseif ($mergedArgs):
-                    $parameters[] = $this->expand(array_shift($mergedArgs));
+                        : $this->create($class, [], $new, $share);
+                elseif ($args):
+                    $parameters[] = $this->expand(array_shift($args));
                 endif;
             endforeach;
 
