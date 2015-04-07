@@ -110,10 +110,10 @@ class Dice
     private function expand($param, array $share = [])
     {
         if (is_array($param)):
-            return array_map(
-                function($p) use($share) { return $this->expand($p, $share); },
-                $param
-            );
+            foreach ($param as &$key):
+                $key = $this->expand($key, $share);
+            endforeach;
+            return $param;
         endif;
 
         if ($param instanceof Instance):
