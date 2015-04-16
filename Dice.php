@@ -113,14 +113,12 @@ class Dice
             foreach ($param as &$key):
                 $key = $this->expand($key, $share);
             endforeach;
-            return $param;
-        endif;
 
-        if ($param instanceof Instance):
+        elseif ($param instanceof Instance):
             if (is_callable($param->name)):
-                return call_user_func($param->name, $this, $share);
+                $param = call_user_func($param->name, $this, $share);
             else:
-                return $this->create($param->name, [], false, $share);
+                $param = $this->create($param->name, [], false, $share);
             endif;
         endif;
 
@@ -157,8 +155,7 @@ class Dice
             $parameters = [];
 
             foreach ($paramInfo as list($class, $allowsNull, $sub, $new)):
-                if ($args):
-                    $numargs = count($args);
+                if ($args && ($numargs = count($args))):
                     for ($i = 0; $i < $numargs; ++$i):
                         if ($class
                             && $args[$i] instanceof $class
