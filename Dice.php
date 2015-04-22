@@ -59,7 +59,7 @@ class Dice
         endif;
 
         if (!empty($this->cache[$component])):
-            return $this->cache[$component]($args);
+            return $this->cache[$component]($args, $share);
         endif;
 
         $rule = $this->getRule($component);

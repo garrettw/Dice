@@ -8,7 +8,7 @@
 */
 namespace Dice\Loader;
 
-class XML {
+class Xml {
     private function getComponent($str, $createInstance = false) {
         if ($createInstance) return (strpos((string) $str, '{') === 0) ? [new Callback($str), 'run'] : new \Dice\Instance((string) $str);
         else return (strpos((string) $str, '{') === 0) ? [new Callback($str), 'run'] : (string) $str;
