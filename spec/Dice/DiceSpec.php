@@ -524,7 +524,7 @@ class DiceSpec extends ObjectBehavior
     {
         $rule = new \Dice\Rule;
 		$rule->shared = true;
-		$this->addRule('Dice\\Blanks\\interfaceTest', $rule);
+		$this->addRule('Dice\\Blanks\\TestInterface', $rule);
 
 		$one = $this->create('Dice\\Blanks\\InterfaceTestClass');
 		$two = $this->create('Dice\\Blanks\\InterfaceTestClass');

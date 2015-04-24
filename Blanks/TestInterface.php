@@ -2,4 +2,4 @@
 
 namespace Dice\Blanks;
 
-interface interfaceTest {}
+interface TestInterface {}

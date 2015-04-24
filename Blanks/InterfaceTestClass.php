@@ -2,4 +2,4 @@
 
 namespace Dice\Blanks;
 
-class InterfaceTestClass implements interfaceTest {}
+class InterfaceTestClass implements TestInterface {}
