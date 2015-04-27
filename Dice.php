@@ -20,7 +20,7 @@ class Dice
     public function __construct($shareme = false)
     {
         if ($shareme):
-            $this->instances['Dice\\Dice'] = $this;
+            $this->instances['Dice\Dice'] = $this;
         endif;
     }
 
@@ -193,9 +193,9 @@ class Rule
     public $call            = [];
     public $shareInstances  = [];
 
-    public function __construct($params = [])
+    public function __construct(array $params = [])
     {
-        if (is_array($params) && count($params)):
+        if (count($params)):
             foreach ($params as $name => $val):
                 $this->$name = $val;
             endforeach;
