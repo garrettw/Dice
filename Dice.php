@@ -157,10 +157,8 @@ class Dice
             foreach ($paramInfo as list($class, $allowsNull, $sub, $new)):
                 if ($args && ($numargs = count($args))):
                     for ($i = 0; $i < $numargs; ++$i):
-                        if ($class
-                            && $args[$i] instanceof $class
-                            || !$args[$i]
-                            && $allowsNull
+                        if ($class && $args[$i] instanceof $class
+                            || ($args[$i] === null && $allowsNull)
                         ):
                             $parameters[] = array_splice($args, $i, 1)[0];
                             continue 2;
@@ -195,11 +193,9 @@ class Rule
 
     public function __construct(array $params = [])
     {
-        if (count($params)):
-            foreach ($params as $name => $val):
-                $this->$name = $val;
-            endforeach;
-        endif;
+        foreach ($params as $name => $val):
+            $this->$name = $val;
+        endforeach;
     }
 }
 
