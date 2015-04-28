@@ -197,6 +197,15 @@ class Rule
             $this->$name = $val;
         endforeach;
     }
+
+    public static function merge(Rule $old, array $newset = [])
+    {
+        $new = clone $old;
+        foreach ($newset as $name => $val):
+            $new->$name = $val;
+        endforeach;
+        return $new;
+    }
 }
 
 class Instance
