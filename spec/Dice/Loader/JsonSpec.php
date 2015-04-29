@@ -30,8 +30,7 @@ class JsonSpec extends ObjectBehavior
 	]
 }';
 
-		$equivalentRule = new \Dice\Rule;
-		$equivalentRule->shared = true;
+		$equivalentRule = ['shared' => true];
 
 		//$this->dice->expects($this->once())->method('addRule')->with($this->equalTo('*'), $this->equalTo($equivalentRule));
 		//$this->dice->addRule('*', $equivalentRule);
@@ -49,8 +48,7 @@ class JsonSpec extends ObjectBehavior
 	]
 }';
 
-        $equivalentRule = new \Dice\Rule;
-		$equivalentRule->shared = true;
+        $equivalentRule = ['shared' => true];
 
 		//$this->dice->addRule('A', $equivalentRule);
 		$this->load($json, $this->dice);
@@ -67,9 +65,7 @@ class JsonSpec extends ObjectBehavior
 	]
 }';
 
-		$equivalentRule = new \Dice\Rule;
-		$equivalentRule->constructParams[] = 'A';
-		$equivalentRule->constructParams[] = 'B';
+		$equivalentRule = ['constructParams' => ['A', 'B']];
 
 		//$this->dice->addRule('A', $equivalentRule);
 		$this->load($json, $this->dice);
@@ -81,13 +77,12 @@ class JsonSpec extends ObjectBehavior
 "rules": [
 		{
 			"name": "A",
-			"substitute": {"Dice\\\\Blanks\\\\B": {"instance": "Dice\\\\Blanks\\\\C"}}
+			"substitute": {"spec\\\\Dice\\\\B": {"instance": "spec\\\\Dice\\\\C"}}
 		}
 	]
 }';
 
-		$equivalentRule = new \Dice\Rule;
-		$equivalentRule->substitutions['Dice\\Blanks\\B'] = new \Dice\Instance('Dice\\Blanks\\C');
+		$equivalentRule = ['substitutions' => ['spec\Dice\B' => ['instance' => 'spec\Dice\C']]];
 
 		//$this->dice->addRule('A', $equivalentRule);
 		$this->load($json, $this->dice);

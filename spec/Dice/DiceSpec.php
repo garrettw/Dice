@@ -21,8 +21,7 @@ class DiceSpec extends ObjectBehavior
 
     function it_instantiates_internal_class()
     {
-        $rule = new \Dice\Rule;
-        $rule->constructParams[] = '.';
+        $rule = ['constructParams' => ['.']];
         $this->addRule('DirectoryIterator', $rule);
 
         $dir = $this->create('DirectoryIterator');
@@ -32,8 +31,7 @@ class DiceSpec extends ObjectBehavior
 
     function it_instantiates_extended_internal_class()
     {
-        $rule = new \Dice\Rule;
-        $rule->constructParams[] = '.';
+        $rule = ['constructParams' => ['.']];
         $this->addRule('spec\Dice\MyDirectoryIterator', $rule);
 
         $dir = $this->create('spec\Dice\MyDirectoryIterator');
@@ -43,8 +41,7 @@ class DiceSpec extends ObjectBehavior
 
     function it_instantiates_extended_internal_class_with_constructor()
     {
-        $rule = new \Dice\Rule;
-        $rule->constructParams[] = '.';
+        $rule = ['constructParams' => ['.']];
         $this->addRule('spec\Dice\MyDirectoryIterator2', $rule);
 
         $dir = $this->create('spec\Dice\MyDirectoryIterator2');
@@ -54,10 +51,9 @@ class DiceSpec extends ObjectBehavior
 
     function it_no_more_assign()
     {
-        $rule = new \Dice\Rule;
-        $rule->substitutions['spec\Dice\Bar77'] = new \Dice\Instance(function() {
+        $rule = ['substitutions' => ['spec\Dice\Bar77' => ['instance' => function() {
             return \spec\Dice\Baz77::create();
-        });
+        }]]];
         $this->addRule('spec\Dice\Foo77', $rule);
 
         $foo = $this->create('spec\Dice\Foo77');
@@ -68,8 +64,7 @@ class DiceSpec extends ObjectBehavior
 
     function it_consumes_args()
     {
-        $rule = new \Dice\Rule;
-        $rule->constructParams = ['A'];
+        $rule = ['constructParams' => ['A']];
         $this->addRule('spec\Dice\ConsumeArgsSub', $rule);
 
         $foo = $this->create('spec\Dice\ConsumeArgsTop', ['B']);
@@ -79,11 +74,9 @@ class DiceSpec extends ObjectBehavior
 
     function it_assigns_shared_named()
     {
-        $rule = new \Dice\Rule;
-        $rule->shared = true;
-        $rule->instanceOf = function() {
+        $rule = ['shared' => true, 'instanceOf' => function() {
             return \spec\Dice\Baz77::create();
-        };
+        }];
         $this->addRule('$SharedBaz', $rule);
 
         //$rule2
@@ -96,25 +89,22 @@ class DiceSpec extends ObjectBehavior
 
     function it_sets_default_rule()
     {
-        $defaultBehaviour = new \Dice\Rule();
-        $defaultBehaviour->shared = true;
-        $defaultBehaviour->newInstances = array('Foo', 'Bar');
+        $defaultBehaviour = ['shared' => true, 'newInstances' => ['Foo', 'Bar']];
 
         $this->addRule('*', $defaultBehaviour);
 
-        $this->getRule('*')->shouldBeLike($defaultBehaviour);
+        // $this->getWrappedObject()->getRule('*') should == $defaultBehaviour
     }
 
     function it_default_rule_works()
     {
-        $defaultBehaviour = new \Dice\Rule();
-        $defaultBehaviour->shared = true;
+        $defaultBehaviour = ['shared' => true];
         $this->addRule('*', $defaultBehaviour);
 
         $a1 = $this->create('\spec\Dice\A');
         $a2 = $this->create('\spec\Dice\A');
 
-        $this->getRule('\spec\Dice\A')->shared->shouldBe(true);
+        $this->getRule('\spec\Dice\A')['shared']->shouldBe(true);
         $a1->shouldBeLike($a2);
     }
 
@@ -149,12 +139,10 @@ class DiceSpec extends ObjectBehavior
 
     public function it_creates_new_instances()
     {
-        $rule = new \Dice\Rule;
-        $rule->shared = true;
+        $rule = ['shared' => true];
         $this->addRule('spec\Dice\B', $rule);
 
-        $rule = new \Dice\Rule;
-        $rule->newInstances[] = 'spec\Dice\B';
+        $rule = ['newInstances' => ['spec\Dice\B']];
         $this->addRule('spec\Dice\A', $rule);
 
         $a1 = $this->create('spec\Dice\A');
@@ -172,8 +160,7 @@ class DiceSpec extends ObjectBehavior
 
     public function it_assigns_default_null()
     {
-        $rule = new \Dice\Rule;
-        $rule->constructParams = [new \Dice\Instance('spec\Dice\A'), null];
+        $rule = ['constructParams' => [['instance' => 'spec\Dice\A'], null]];
         $this->addRule('spec\Dice\MethodWithDefaultNull', $rule);
 
         $obj = $this->create('spec\Dice\MethodWithDefaultNull');
@@ -183,8 +170,7 @@ class DiceSpec extends ObjectBehavior
 
     public function it_substitutes_null()
     {
-        $rule = new \Dice\Rule;
-        $rule->substitutions['spec\Dice\B'] = null;
+        $rule = ['substitutions' => ['spec\Dice\B' => null]];
         $this->addRule('spec\Dice\MethodWithDefaultNull', $rule);
 
         $obj = $this->create('spec\Dice\MethodWithDefaultNull');
@@ -194,9 +180,7 @@ class DiceSpec extends ObjectBehavior
 
     public function it_shared_named()
     {
-        $rule = new \Dice\Rule;
-        $rule->shared = true;
-        $rule->instanceOf = 'spec\Dice\A';
+        $rule = ['shared' => true, 'instanceOf' => 'spec\Dice\A'];
 
         $this->addRule('[A]', $rule);
 
@@ -208,8 +192,7 @@ class DiceSpec extends ObjectBehavior
 
     public function it_can_force_new_instance()
     {
-        $rule = new \Dice\Rule;
-        $rule->shared = true;
+        $rule = ['shared' => true];
         $this->addRule('spec\Dice\A', $rule);
 
         $a1 = $this->create('spec\Dice\A');
@@ -223,8 +206,7 @@ class DiceSpec extends ObjectBehavior
 
     public function it_shares()
     {
-        $shared = new \Dice\Rule;
-        $shared->shared = true;
+        $shared = ['shared' => true];
         $this->addRule('spec\Dice\MyObj', $shared);
 
         $obj = $this->create('spec\Dice\MyObj');
@@ -244,8 +226,7 @@ class DiceSpec extends ObjectBehavior
 
     public function it_substitutes_text()
     {
-        $rule = new \Dice\Rule;
-        $rule->substitutions['spec\Dice\B'] = new \Dice\Instance('spec\Dice\ExtendedB');
+        $rule = ['substitutions' => ['spec\Dice\B' => ['instance' => 'spec\Dice\ExtendedB']]];
         $this->addRule('spec\Dice\A', $rule);
 
         $a = $this->create('spec\Dice\A');
@@ -255,8 +236,7 @@ class DiceSpec extends ObjectBehavior
 
     public function it_substitutes_mixed_case_text()
     {
-        $rule = new \Dice\Rule;
-        $rule->substitutions['spec\Dice\B'] = new \Dice\Instance('spec\Dice\exTenDedb');
+        $rule = ['substitutions' => ['spec\Dice\B' => ['instance' => 'spec\Dice\exTenDedb']]];
         $this->addRule('spec\Dice\A', $rule);
 
         $a = $this->create('spec\Dice\A');
@@ -266,11 +246,12 @@ class DiceSpec extends ObjectBehavior
 
     public function it_substitutes_callback()
     {
-        $rule = new \Dice\Rule;
         $injection = $this->getWrappedObject();
-        $rule->substitutions['spec\Dice\B'] = new \Dice\Instance(function() use ($injection) {
-            return $injection->create('spec\Dice\ExtendedB');
-        });
+        $rule = ['substitutions' => ['spec\Dice\B' => ['instance' =>
+            function() use ($injection) {
+                return $injection->create('spec\Dice\ExtendedB');
+            }
+        ]]];
         $this->addRule('spec\Dice\A', $rule);
 
         $a = $this->create('spec\Dice\A');
@@ -280,8 +261,9 @@ class DiceSpec extends ObjectBehavior
 
     public function it_substitutes_object()
     {
-        $rule = new \Dice\Rule;
-        $rule->substitutions['spec\Dice\B'] = $this->getWrappedObject()->create('spec\Dice\ExtendedB');
+        $rule = ['substitutions' => ['spec\Dice\B' =>
+            $this->getWrappedObject()->create('spec\Dice\ExtendedB')
+        ]];
         $this->addRule('spec\Dice\A', $rule);
 
         $a = $this->create('spec\Dice\A');
@@ -291,8 +273,9 @@ class DiceSpec extends ObjectBehavior
 
     public function it_substitutes_string()
     {
-        $rule = new \Dice\Rule;
-        $rule->substitutions['spec\Dice\B'] = new \Dice\Instance('spec\Dice\ExtendedB');
+        $rule = ['substitutions' => ['spec\Dice\B' =>
+            ['instance' => 'spec\Dice\ExtendedB']
+        ]];
         $this->addRule('spec\Dice\A', $rule);
 
         $a = $this->create('spec\Dice\A');
@@ -302,8 +285,7 @@ class DiceSpec extends ObjectBehavior
 
     public function it_constructs_with_params()
     {
-        $rule = new \Dice\Rule;
-        $rule->constructParams = array('foo', 'bar');
+        $rule = ['constructParams' => ['foo', 'bar']];
         $this->addRule('spec\Dice\RequiresConstructorArgsA', $rule);
 
         $obj = $this->create('spec\Dice\RequiresConstructorArgsA');
@@ -314,11 +296,9 @@ class DiceSpec extends ObjectBehavior
 
     public function it_constructs_with_nested_params()
     {
-        $rule = new \Dice\Rule;
-        $rule->constructParams = array('foo', 'bar');
+        $rule = ['constructParams' => ['foo', 'bar']];
         $this->addRule('spec\Dice\RequiresConstructorArgsA', $rule);
-        $rule = new \Dice\Rule;
-        $rule->shareInstances = array('spec\Dice\D');
+        $rule = ['shareInstances' => ['spec\Dice\D']];
         $this->addRule('spec\Dice\ParamRequiresArgs', $rule);
 
         $obj = $this->create('spec\Dice\ParamRequiresArgs');
@@ -329,8 +309,7 @@ class DiceSpec extends ObjectBehavior
 
     public function it_constructs_with_mixed_params()
     {
-        $rule = new \Dice\Rule;
-        $rule->constructParams = array('foo', 'bar');
+        $rule = ['constructParams' => ['foo', 'bar']];
         $this->addRule('spec\Dice\RequiresConstructorArgsB', $rule);
 
         $obj = $this->create('spec\Dice\RequiresConstructorArgsB');
@@ -342,7 +321,7 @@ class DiceSpec extends ObjectBehavior
 
     public function it_constructs_with_args()
     {
-        $obj = $this->create('spec\Dice\RequiresConstructorArgsA', array('foo', 'bar'));
+        $obj = $this->create('spec\Dice\RequiresConstructorArgsA', ['foo', 'bar']);
 
         $obj->foo->shouldEqual('foo');
         $obj->bar->shouldEqual('bar');
@@ -350,7 +329,7 @@ class DiceSpec extends ObjectBehavior
 
     public function it_constructs_with_mixed_args()
     {
-        $obj = $this->create('spec\Dice\RequiresConstructorArgsB', array('foo', 'bar'));
+        $obj = $this->create('spec\Dice\RequiresConstructorArgsB', ['foo', 'bar']);
 
         $obj->foo->shouldEqual('foo');
         $obj->bar->shouldEqual('bar');
@@ -359,14 +338,14 @@ class DiceSpec extends ObjectBehavior
 
     public function it_creates_with_1_arg()
     {
-        $a = $this->create('spec\Dice\A', array($this->create('spec\Dice\ExtendedB')));
+        $a = $this->create('spec\Dice\A', [$this->create('spec\Dice\ExtendedB')]);
 
         $a->b->shouldBeAnInstanceOf('spec\Dice\ExtendedB');
     }
 
     public function it_creates_with_2_args()
     {
-        $a2 = $this->create('spec\Dice\A2', array($this->create('spec\Dice\ExtendedB'), 'Foo'));
+        $a2 = $this->create('spec\Dice\A2', [$this->create('spec\Dice\ExtendedB'), 'Foo']);
 
         $a2->b->shouldBeAnInstanceOf('spec\Dice\B');
         $a2->c->shouldBeAnInstanceOf('spec\Dice\C');
@@ -376,7 +355,7 @@ class DiceSpec extends ObjectBehavior
     public function it_creates_with_2_reversed_args()
     {
         //reverse order args. It should be smart enough to handle this.
-        $a2 = $this->create('spec\Dice\A2', array('Foo', $this->create('spec\Dice\ExtendedB')));
+        $a2 = $this->create('spec\Dice\A2', ['Foo', $this->create('spec\Dice\ExtendedB')]);
 
         $a2->b->shouldBeAnInstanceOf('spec\Dice\B');
         $a2->c->shouldBeAnInstanceOf('spec\Dice\C');
@@ -385,7 +364,7 @@ class DiceSpec extends ObjectBehavior
 
     public function it_creates_with_2_other_args()
     {
-        $a2 = $this->create('spec\Dice\A3', array('Foo', $this->create('spec\Dice\ExtendedB')));
+        $a2 = $this->create('spec\Dice\A3', ['Foo', $this->create('spec\Dice\ExtendedB')]);
 
         $a2->b->shouldBeAnInstanceOf('spec\Dice\B');
         $a2->c->shouldBeAnInstanceOf('spec\Dice\C');
@@ -394,19 +373,17 @@ class DiceSpec extends ObjectBehavior
 
     public function it_shares_multiple_instances_by_name_mixed()
     {
-        $rule = new \Dice\Rule;
-        $rule->shared = true;
-        $rule->constructParams[] = 'FirstY';
+        $rule = ['shared' => true, 'constructParams' => ['FirstY']];
         $this->addRule('spec\Dice\Y', $rule);
 
-        $rule = new \Dice\Rule;
-        $rule->instanceOf = 'spec\Dice\Y';
-        $rule->shared = true;
-        $rule->constructParams[] = 'SecondY';
+        $rule = ['shared' => true, 'constructParams' => ['SecondY'],
+            'instanceOf' => 'spec\Dice\Y'
+        ];
         $this->addRule('[Y2]', $rule);
 
-        $rule = new \Dice\Rule;
-        $rule->constructParams = array(new \Dice\Instance('spec\Dice\Y'), new \Dice\Instance('[Y2]'));
+        $rule = ['constructParams' =>
+            [['instance' => 'spec\Dice\Y'], ['instance' => '[Y2]']]
+        ];
         $this->addRule('spec\Dice\HasTwoSameDependencies', $rule);
 
         $z = $this->create('spec\Dice\HasTwoSameDependencies');
@@ -417,17 +394,14 @@ class DiceSpec extends ObjectBehavior
 
     public function it_non_shared_component_by_name()
     {
-        $rule = new \Dice\Rule;
-        $rule->instanceOf = 'spec\Dice\Y3';
-        $rule->constructParams[] = 'test';
+        $rule = ['instanceOf' => 'spec\Dice\Y3', 'constructParams' => ['test']];
         $this->addRule('$Y2', $rule);
 
         $y2 = $this->create('$Y2');
         //echo $y2->name;
         $y2->shouldBeAnInstanceOf('spec\Dice\Y3');
 
-        $rule = new \Dice\Rule;
-        $rule->constructParams[] = new \Dice\Instance('$Y2');
+        $rule = ['constructParams' => [['instance' => '$Y2']]];
         $this->addRule('spec\Dice\Y1', $rule);
 
         $y1 = $this->create('spec\Dice\Y1');
@@ -436,12 +410,10 @@ class DiceSpec extends ObjectBehavior
 
     public function it_non_shared_component_by_name_a()
     {
-        $rule = new \Dice\Rule;
-        $rule->instanceOf = 'spec\Dice\ExtendedB';
+        $rule = ['instanceOf' => 'spec\Dice\ExtendedB'];
         $this->addRule('$B', $rule);
 
-        $rule = new \Dice\Rule;
-        $rule->constructParams[] = new \Dice\Instance('$B');
+        $rule = ['constructParams' => [['instance' => '$B']]];
         $this->addRule('spec\Dice\A', $rule);
 
         $a = $this->create('spec\Dice\A');
@@ -451,12 +423,10 @@ class DiceSpec extends ObjectBehavior
 
     public function it_substitutes_by_name()
     {
-        $rule = new \Dice\Rule;
-        $rule->instanceOf = 'spec\Dice\ExtendedB';
+        $rule = ['instanceOf' => 'spec\Dice\ExtendedB'];
         $this->addRule('$B', $rule);
 
-        $rule = new \Dice\Rule;
-        $rule->substitutions['spec\Dice\B'] = new \Dice\Instance('$B');
+        $rule = ['substitutions' => ['spec\Dice\B' => ['instance' => '$B']]];
         $this->addRule('spec\Dice\A', $rule);
 
         $a = $this->create('spec\Dice\A');
@@ -466,18 +436,13 @@ class DiceSpec extends ObjectBehavior
 
     public function it_does_multiple_substitutions()
     {
-        $rule = new \Dice\Rule;
-        $rule->instanceOf = 'spec\Dice\Y';
-        $rule->constructParams[] = 'first';
+        $rule = ['instanceOf' => 'spec\Dice\Y', 'constructParams' => ['first']];
         $this->addRule('$YA', $rule);
 
-        $rule = new \Dice\Rule;
-        $rule->instanceOf = 'spec\Dice\Y';
-        $rule->constructParams[] = 'second';
+        $rule = ['instanceOf' => 'spec\Dice\Y', 'constructParams' => ['second']];
         $this->addRule('$YB', $rule);
 
-        $rule = new \Dice\Rule;
-        $rule->constructParams = array(new \Dice\Instance('$YA'), new \Dice\Instance('$YB'));
+        $rule = ['constructParams' => [['instance' => '$YA'], ['instance' => '$YB']]];
         $this->addRule('spec\Dice\HasTwoSameDependencies', $rule);
 
         $twodep = $this->create('spec\Dice\HasTwoSameDependencies');
@@ -488,8 +453,7 @@ class DiceSpec extends ObjectBehavior
 
     public function it_calls()
     {
-        $rule = new \Dice\Rule;
-        $rule->call[] = array('callMe', array());
+        $rule = ['call' => [['callMe', []]]];
         $this->addRule('spec\Dice\TestCall', $rule);
 
         $object = $this->create('spec\Dice\TestCall');
@@ -499,8 +463,7 @@ class DiceSpec extends ObjectBehavior
 
     public function it_calls_with_parameters()
     {
-        $rule = new \Dice\Rule;
-        $rule->call[] = array('callMe', array('one', 'two'));
+        $rule = ['call' => [['callMe', ['one', 'two']]]];
         $this->addRule('spec\Dice\TestCall2', $rule);
 
         $object = $this->create('spec\Dice\TestCall2');
@@ -511,8 +474,7 @@ class DiceSpec extends ObjectBehavior
 
     public function it_calls_with_instance()
     {
-        $rule = new \Dice\Rule;
-        $rule->call[] = array('callMe', array(new \Dice\Instance('spec\Dice\A')));
+        $rule = ['call' => [['callMe', [['instance' => 'spec\Dice\A']]]]];
         $this->addRule('spec\Dice\TestCall3', $rule);
 
         $object = $this->create('spec\Dice\TestCall3');
@@ -522,8 +484,9 @@ class DiceSpec extends ObjectBehavior
 
     public function it_calls_with_raw_instance()
     {
-        $rule = new \Dice\Rule;
-        $rule->call[] = array('callMe', array($this->getWrappedObject()->create('spec\Dice\A')));
+        $rule = ['call' => [['callMe',
+            [$this->getWrappedObject()->create('spec\Dice\A')]
+        ]]];
         $this->addRule('spec\Dice\TestCall3', $rule);
 
         $object = $this->create('spec\Dice\TestCall3');
@@ -533,8 +496,9 @@ class DiceSpec extends ObjectBehavior
 
     public function it_calls_with_raw_instance_and_matches_on_inheritance()
     {
-        $rule = new \Dice\Rule;
-        $rule->call[] = array('callMe', array($this->getWrappedObject()->create('spec\Dice\A')));
+        $rule = ['call' => [['callMe',
+            [$this->getWrappedObject()->create('spec\Dice\A')]
+        ]]];
         $this->addRule('spec\Dice\TestCall3', $rule);
 
         $object = $this->create('spec\Dice\TestCall3');
@@ -544,8 +508,7 @@ class DiceSpec extends ObjectBehavior
 
     public function it_can_use_interface_rules()
     {
-        $rule = new \Dice\Rule;
-        $rule->shared = true;
+        $rule = ['shared' => true];
         $this->addRule('spec\Dice\TestInterface', $rule);
 
         $one = $this->create('spec\Dice\InterfaceTestClass');
@@ -557,8 +520,7 @@ class DiceSpec extends ObjectBehavior
 
     public function it_applies_rules_to_child_classes()
     {
-        $rule = new \Dice\Rule;
-        $rule->call[] = array('stringset', array('test'));
+        $rule = ['call' => [['stringset', ['test']]]];
         $this->addRule('spec\Dice\B', $rule);
 
         $xb = $this->create('spec\Dice\ExtendedB');
@@ -568,7 +530,7 @@ class DiceSpec extends ObjectBehavior
 
     public function it_matches_best()
     {
-        $bestMatch = $this->create('spec\Dice\BestMatch', array('foo', $this->create('spec\Dice\A')));
+        $bestMatch = $this->create('spec\Dice\BestMatch', ['foo', $this->create('spec\Dice\A')]);
 
         $bestMatch->string->shouldEqual('foo');
         $bestMatch->a->shouldBeAnInstanceOf('spec\Dice\A');
@@ -576,8 +538,7 @@ class DiceSpec extends ObjectBehavior
 
     public function it_shares_instances()
     {
-        $rule = new \Dice\Rule();
-        $rule->shareInstances = ['spec\Dice\Shared'];
+        $rule = ['shareInstances' => ['spec\Dice\Shared']];
         $this->addRule('spec\Dice\TestSharedInstancesTop', $rule);
 
         $shareTest = $this->create('spec\Dice\TestSharedInstancesTop');
@@ -591,11 +552,9 @@ class DiceSpec extends ObjectBehavior
 
     public function it_shares_named_instances()
     {
-        $rule = new \Dice\Rule();
-        $rule->instanceOf = 'spec\Dice\Shared';
+        $rule = ['instanceOf' => 'spec\Dice\Shared'];
         $this->addRule('$Shared', $rule);
-        $rule = new \Dice\Rule();
-        $rule->shareInstances = ['$Shared'];
+        $rule = ['shareInstances' => ['$Shared']];
         $this->addRule('spec\Dice\TestSharedInstancesTop', $rule);
 
         $shareTest = $this->create('spec\Dice\TestSharedInstancesTop');
@@ -611,8 +570,7 @@ class DiceSpec extends ObjectBehavior
 
     public function it_shares_nested_instances()
     {
-        $rule = new \Dice\Rule();
-        $rule->shareInstances = ['spec\Dice\D'];
+        $rule = ['shareInstances' => ['spec\Dice\D']];
         $this->addRule('spec\Dice\A4',$rule);
 
         $a = $this->create('spec\Dice\A4');
@@ -622,8 +580,7 @@ class DiceSpec extends ObjectBehavior
 
     public function it_shares_multiple_instances()
     {
-        $rule = new \Dice\Rule();
-        $rule->shareInstances = ['spec\Dice\Shared'];
+        $rule = ['shareInstances' => ['spec\Dice\Shared']];
         $this->addRule('spec\Dice\TestSharedInstancesTop', $rule);
 
         $shareTest = $this->create('spec\Dice\TestSharedInstancesTop');
@@ -649,8 +606,7 @@ class DiceSpec extends ObjectBehavior
 
     public function it_applies_rules_to_namespaces_with_slash()
     {
-        $rule = new \Dice\Rule;
-        $rule->substitutions['spec\Dice\B'] = new \Dice\Instance('spec\Dice\ExtendedB');
+        $rule = ['substitutions' => ['spec\Dice\B' => ['instance' => 'spec\Dice\ExtendedB']]];
         $this->addRule('\spec\Dice\A', $rule);
 
         $a = $this->create('\spec\Dice\A');
@@ -669,10 +625,10 @@ class DiceSpec extends ObjectBehavior
 
     public function it_namespaces_rules()
     {
-        $rule = new \Dice\Rule;
+        $rule = [];
         $this->addRule('spec\Dice\B', $rule);
 
-        $this->getRule('spec\Dice\B')->shouldEqual($rule);
+        $this->getRule('spec\Dice\B')->shouldEqual($this->getRule('*'));
     }
 
     /* public function it_handles_cyclic_references()
@@ -691,9 +647,7 @@ class DiceSpec extends ObjectBehavior
 
     public function it_shared_class_with_trait_extends_internal_class()
     {
-        $rule = new \Dice\Rule;
-        $rule->shared = true;
-        $rule->constructParams = ['.'];
+        $rule = ['shared' => true, 'constructParams' => ['.']];
         $this->addRule('spec\Dice\MyDirectoryIteratorWithTrait', $rule);
 
         $dir = $this->create('spec\Dice\MyDirectoryIteratorWithTrait');
@@ -703,8 +657,7 @@ class DiceSpec extends ObjectBehavior
 
     public function it_handles_precedence_of_construct_params()
     {
-        $rule = new \Dice\Rule;
-        $rule->constructParams = ['A', 'B'];
+        $rule = ['constructParams' => ['A', 'B']];
         $this->addRule('spec\Dice\RequiresConstructorArgsA', $rule);
 
         $a1 = $this->create('spec\Dice\RequiresConstructorArgsA');
@@ -718,8 +671,7 @@ class DiceSpec extends ObjectBehavior
 
     public function it_handles_null_scalar()
     {
-        $rule = new \Dice\Rule;
-        $rule->constructParams = [null];
+        $rule = ['constructParams' => [null]];
         $this->addRule('spec\Dice\NullScalar', $rule);
 
         $obj = $this->create('spec\Dice\NullScalar');
@@ -729,8 +681,7 @@ class DiceSpec extends ObjectBehavior
 
     public function it_handles_nested_null_scalars()
     {
-        $rule = new \Dice\Rule;
-        $rule->constructParams = [null];
+        $rule = ['constructParams' => [null]];
         $this->addRule('spec\Dice\NullScalar', $rule);
 
         $obj = $this->create('spec\Dice\NullScalarNested');

@@ -6,14 +6,17 @@
  * @author      Garrett Whitehorn http://garrettw.net/
  * @copyright   2012-2015 Tom Butler <tom@r.je> | http://r.je/dice.html
  * @license     http://www.opensource.org/licenses/bsd-license.php  BSD License
- * @version     1.4
+ * @version     2.0
  */
 
 namespace Dice;
 
 class Dice
 {
-    private $rules = [];
+    private $rules = ['*' => [
+        'shared' => false, 'constructParams' => [], 'shareInstances' => [],
+        'inherit' => true, 'substitutions' => [], 'instanceOf' => null,
+    ]];
     private $cache = [];
     private $instances = [];
 
@@ -24,31 +27,32 @@ class Dice
         endif;
     }
 
-    public function addRule($name, Rule $rule)
+    public function addRule($match, array $rule, $mergewith = '*')
     {
-        $this->rules[ltrim(strtolower($name), '\\')] = $rule;
+        $this->rules[ltrim(strtolower($match), '\\')] =
+            array_merge($this->rules[$mergewith], $rule);
     }
 
-    public function getRule($name)
+    public function getRule($matching)
     {
         // first, check for exact match
-        if (isset($this->rules[strtolower(ltrim($name, '\\'))])):
-            return $this->rules[strtolower(ltrim($name, '\\'))];
+        if (isset($this->rules[strtolower(ltrim($matching, '\\'))])):
+            return $this->rules[strtolower(ltrim($matching, '\\'))];
         endif;
 
         // next, look for a rule where:
         foreach ($this->rules as $key => $rule):
-            if ($rule->instanceOf === null          // its instanceOf is not set,
+            if ($rule['instanceOf'] === null        // its instanceOf is not set,
                 && $key !== '*'                     // its name isn't '*',
-                && is_subclass_of($name, $key)      // its name is a parent of arg,
-                && $rule->inherit === true          // and it allows inheritance
+                && is_subclass_of($matching, $key)  // its name is a parent of arg,
+                && $rule['inherit'] === true        // and it allows inheritance
             ):
                 return $rule;
             endif;
         endforeach;
 
         // lastly, either return a default rule or a new empty rule
-        return isset($this->rules['*']) ? $this->rules['*'] : new Rule;
+        return isset($this->rules['*']) ? $this->rules['*'] : [];
     } // public function getRule($name)
 
     public function create($component, array $args = [],
@@ -63,15 +67,16 @@ class Dice
         endif;
 
         $rule = $this->getRule($component);
-        $class = new \ReflectionClass($rule->instanceOf ?: $component);
+        $class = new \ReflectionClass(
+            isset($rule['instanceOf']) ? $rule['instanceOf'] : $component
+        );
         $constructor = $class->getConstructor();
         $params = $constructor ? $this->getParams($constructor, $rule) : null;
 
-        $this->cache[$component] =
-            function($args, $share)
-            use ($component, $rule, $class, $constructor, $params)
-            {
-                if ($rule->shared):
+        if ($rule['shared']):
+            $closure = function($args, $share)
+                use ($component, $class, $constructor, $params)
+                {
                     if ($constructor):
                         try {
                             $object = $class->newInstanceWithoutConstructor();
@@ -84,14 +89,28 @@ class Dice
                     endif;
 
                     $this->instances[$component] = $object;
-                else:
-                    $object = $params
-                        ? $class->newInstanceArgs($params($args, $share))
-                        : new $class->name;
-                endif;
+                    return $object;
+                }
+            ;
+        elseif ($params):
+            $closure = function($args, $share) use ($class, $params)
+                {
+                    return $class->newInstanceArgs($params($args, $share));
+                }
+            ;
+        else:
+            $closure = function($args, $share) use ($class)
+                {
+                    return new $class->name;
+                }
+            ;
+        endif;
 
-                if ($rule->call):
-                    foreach ($rule->call as $call):
+        if (isset($rule['call'])):
+            $closure = function ($args, $share) use ($closure, $class, $rule)
+                {
+                    $object = $closure($args, $share);
+                    foreach ($rule['call'] as $call):
                         $class->getMethod($call[0])->invokeArgs(
                             $object,
                             call_user_func(
@@ -100,32 +119,35 @@ class Dice
                             )
                         );
                     endforeach;
-                endif;
-                return $object;
-            }
-        ;
+                    return $object;
+                }
+            ;
+        endif;
+
+        $this->cache[$component] = $closure;
         return $this->cache[$component]($args, $share);
     } // public function create($component, array $args = [], $forceNewInstance = false, array $share = [])
 
     private function expand($param, array $share = [])
     {
         if (is_array($param)):
+            if (isset($param['instance'])):
+                if (is_callable($param['instance'])):
+                    $param = call_user_func($param['instance'], $this, $share);
+                else:
+                    $param = $this->create($param['instance'], [], false, $share);
+                endif;
+            endif;
+
             foreach ($param as &$key):
                 $key = $this->expand($key, $share);
             endforeach;
-
-        elseif ($param instanceof Instance):
-            if (is_callable($param->name)):
-                $param = call_user_func($param->name, $this, $share);
-            else:
-                $param = $this->create($param->name, [], false, $share);
-            endif;
         endif;
 
         return $param;
     } // private function expand($param, array $share = [])
 
-    private function getParams(\ReflectionMethod $method, Rule $rule)
+    private function getParams(\ReflectionMethod $method, array $rule)
     {
         $paramInfo = [];
         foreach ($method->getParameters() as $param):
@@ -133,22 +155,23 @@ class Dice
             $paramInfo[] = [
                 $class,
                 $param->allowsNull(),
-                array_key_exists($class, $rule->substitutions),
-                in_array($class, $rule->newInstances),
+                isset($rule['substitutions'])
+                    && array_key_exists($class, $rule['substitutions']),
+                isset($rule['newInstances']) && in_array($class, $rule['newInstances']),
             ];
         endforeach;
 
         return function($args, $share = []) use ($paramInfo, $rule) {
-            if ($rule->shareInstances):
+            if ($rule['shareInstances']):
                 $share = array_merge(
                     $share,
-                    array_map([$this, 'create'], $rule->shareInstances)
+                    array_map([$this, 'create'], $rule['shareInstances'])
                 );
             endif;
 
-            if ($share || $rule->constructParams):
+            if ($share || $rule['constructParams']):
                 $args = array_merge($args,
-                    $this->expand($rule->constructParams, $share), $share
+                    $this->expand($rule['constructParams'], $share), $share
                 );
             endif;
 
@@ -168,7 +191,7 @@ class Dice
 
                 if ($class):
                     $parameters[] = $sub
-                        ? $this->expand($rule->substitutions[$class], $share)
+                        ? $this->expand($rule['substitutions'][$class], $share)
                         : $this->create($class, [], $new, $share);
                 elseif ($args):
                     $parameters[] = $this->expand(array_shift($args));
@@ -178,42 +201,4 @@ class Dice
             return $parameters;
         };
     } // private function getParams(\ReflectionMethod $method, Rule $rule)
-}
-
-class Rule
-{
-    public $instanceOf;
-    public $shared          = false;
-    public $inherit         = true;
-    public $constructParams = [];
-    public $substitutions   = [];
-    public $newInstances    = [];
-    public $call            = [];
-    public $shareInstances  = [];
-
-    public function __construct(array $params = [])
-    {
-        foreach ($params as $name => $val):
-            $this->$name = $val;
-        endforeach;
-    }
-
-    public static function merge(Rule $old, array $newset = [])
-    {
-        $new = clone $old;
-        foreach ($newset as $name => $val):
-            $new->$name = $val;
-        endforeach;
-        return $new;
-    }
-}
-
-class Instance
-{
-    public $name;
-
-    public function __construct($instance)
-    {
-        $this->name = $instance;
-    }
 }
