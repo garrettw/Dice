@@ -155,7 +155,8 @@ class Dice
                 $class,
                 $param->allowsNull(),
                 array_key_exists($class, $rule['substitutions']),
-                in_array($class, $rule['newInstances']),
+                isset($rule['newInstances'])
+                    && in_array($class, $rule['newInstances']),
             ];
         endforeach;
 
