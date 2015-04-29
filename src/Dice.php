@@ -79,17 +79,16 @@ class Dice
                 {
                     if ($constructor):
                         try {
-                            $object = $class->newInstanceWithoutConstructor();
-                            $constructor->invokeArgs($object, $params($args, $share));
+                            $this->instances[$component] = $class->newInstanceWithoutConstructor();
+                            $constructor->invokeArgs($this->instances[$component], $params($args, $share));
                         } catch (\ReflectionException $r) {
-                            $object = $class->newInstanceArgs($params($args, $share));
+                            $this->instances[$component] = $class->newInstanceArgs($params($args, $share));
                         }
                     else:
-                        $object = $class->newInstanceWithoutConstructor();
+                        $this->instances[$component] = $class->newInstanceWithoutConstructor();
                     endif;
 
-                    $this->instances[$component] = $object;
-                    return $object;
+                    return $this->instances[$component];
                 }
             ;
         elseif ($params):
@@ -155,9 +154,8 @@ class Dice
             $paramInfo[] = [
                 $class,
                 $param->allowsNull(),
-                isset($rule['substitutions'])
-                    && array_key_exists($class, $rule['substitutions']),
-                isset($rule['newInstances']) && in_array($class, $rule['newInstances']),
+                array_key_exists($class, $rule['substitutions']),
+                in_array($class, $rule['newInstances']),
             ];
         endforeach;
 
@@ -178,8 +176,8 @@ class Dice
             $parameters = [];
 
             foreach ($paramInfo as list($class, $allowsNull, $sub, $new)):
-                if ($args && ($numargs = count($args))):
-                    for ($i = 0; $i < $numargs; ++$i):
+                if ($args):
+                    for ($i = 0, $numargs = count($args); $i < $numargs; ++$i):
                         if ($class && $args[$i] instanceof $class
                             || ($args[$i] === null && $allowsNull)
                         ):
