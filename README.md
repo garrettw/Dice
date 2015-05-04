@@ -3,7 +3,9 @@
 
 Dice is a minimalist Dependency Injection Container for PHP with a focus on being lightweight and fast as well as requiring as little configuration as possible.
 
-[![Latest Stable Version](https://poser.pugx.org/garrettw/dice/v/stable.svg)](https://packagist.org/packages/garrettw/dice) [![Total Downloads](https://poser.pugx.org/garrettw/dice/downloads.svg)](https://packagist.org/packages/garrettw/dice) [![Latest Unstable Version](https://poser.pugx.org/garrettw/dice/v/unstable.svg)](https://packagist.org/packages/garrettw/dice) [![License](https://poser.pugx.org/garrettw/dice/license.svg)](https://packagist.org/packages/garrettw/dice) [![SensioLabsInsight](https://insight.sensiolabs.com/projects/b685aa59-9df5-410e-8262-3d64b65b4153/mini.png)](https://insight.sensiolabs.com/projects/b685aa59-9df5-410e-8262-3d64b65b4153)
+[![Latest Stable Version](https://poser.pugx.org/garrettw/dice/v/stable.svg)](https://packagist.org/packages/garrettw/dice) [![Total Downloads](https://poser.pugx.org/garrettw/dice/downloads.svg)](https://packagist.org/packages/garrettw/dice) [![Latest Unstable Version](https://poser.pugx.org/garrettw/dice/v/unstable.svg)](https://packagist.org/packages/garrettw/dice) [![License](https://poser.pugx.org/garrettw/dice/license.svg)](https://packagist.org/packages/garrettw/dice)
+
+[![Code Climate](https://codeclimate.com/github/garrettw/dice/badges/gpa.svg)](https://codeclimate.com/github/garrettw/dice) [![SensioLabsInsight](https://insight.sensiolabs.com/projects/b685aa59-9df5-410e-8262-3d64b65b4153/mini.png)](https://insight.sensiolabs.com/projects/b685aa59-9df5-410e-8262-3d64b65b4153)
 
 Project Goals
 -------------
