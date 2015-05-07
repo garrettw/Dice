@@ -63,44 +63,44 @@ class Dice
         return $this->rules['*'];
     } // public function getRule($name)
 
-    public function create($component, array $args = [],
+    public function create($name, array $args = [],
                            $forceNewInstance = false, array $share = [])
     {
-        if (!$forceNewInstance && isset($this->instances[$component])):
+        if (!$forceNewInstance && isset($this->instances[$name])):
             // we're not forcing a fresh instance at create-time,
             // and we've already created one so just return that same one
-            return $this->instances[$component];
+            return $this->instances[$name];
         endif;
 
         // so now, either we need a new instance or just don't have one stored
-        if (!empty($this->cache[$component])):
+        if (!empty($this->cache[$name])):
             // but we do have the function stored that creates it, so call that
-            return $this->cache[$component]($args, $share);
+            return $this->cache[$name]($args, $share);
         endif;
 
-        $rule = $this->getRule($component);
+        $rule = $this->getRule($name);
         $class = new \ReflectionClass( // get an object to inspect target class
-            isset($rule['instanceOf']) ? $rule['instanceOf'] : $component
+            isset($rule['instanceOf']) ? $rule['instanceOf'] : $name
         );
         $constructor = $class->getConstructor();
         $params = $constructor ? $this->getParams($constructor, $rule) : null;
 
         if ($rule['shared']):
             $closure = function($args, $share)
-                use ($component, $class, $constructor, $params)
+                use ($name, $class, $constructor, $params)
                 {
                     if ($constructor):
                         try {
-                            $this->instances[$component] = $class->newInstanceWithoutConstructor();
-                            $constructor->invokeArgs($this->instances[$component], $params($args, $share));
+                            $this->instances[$name] = $class->newInstanceWithoutConstructor();
+                            $constructor->invokeArgs($this->instances[$name], $params($args, $share));
                         } catch (\ReflectionException $r) {
-                            $this->instances[$component] = $class->newInstanceArgs($params($args, $share));
+                            $this->instances[$name] = $class->newInstanceArgs($params($args, $share));
                         }
                     else:
-                        $this->instances[$component] = $class->newInstanceWithoutConstructor();
+                        $this->instances[$name] = $class->newInstanceWithoutConstructor();
                     endif;
 
-                    return $this->instances[$component];
+                    return $this->instances[$name];
                 }
             ;
         elseif ($params):
@@ -135,9 +135,9 @@ class Dice
             ;
         endif;
 
-        $this->cache[$component] = $closure;
-        return $this->cache[$component]($args, $share);
-    } // public function create($component, array $args = [], $forceNewInstance = false, array $share = [])
+        $this->cache[$name] = $closure;
+        return $this->cache[$name]($args, $share);
+    } // public function create($name, array $args = [], $forceNewInstance = false, array $share = [])
 
     private function expand($param, array $share = [])
     {
@@ -148,8 +148,8 @@ class Dice
 
         if (!isset($param['instance'])):
             // not a lazy instance, so recurse to catch any on deeper levels
-            foreach ($param as &$key):
-                $key = $this->expand($key, $share);
+            foreach ($param as &$value):
+                $value = $this->expand($value, $share);
             endforeach;
             return $param;
         endif;
