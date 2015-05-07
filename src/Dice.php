@@ -15,7 +15,8 @@ class Dice
 {
     private $rules = ['*' => [
         'shared' => false, 'constructParams' => [], 'shareInstances' => [],
-        'inherit' => true, 'substitutions' => [], 'instanceOf' => null,
+        'call' => [], 'inherit' => true, 'substitutions' => [],
+        'instanceOf' => null,
     ]];
     private $cache = [];
     private $instances = [];
@@ -27,19 +28,15 @@ class Dice
         endif;
     }
 
-    public function addRule($match, array $rule, $mergewith = '*')
+    public function addRule($match, array $rule, $mergebase = '*')
     {
         $match = $this->normalizeName($match);
 
-        if ($mergewith !== '*'):
-            $mergewith = $this->normalizeName($mergewith);
+        if (!is_array($mergebase)):
+            $mergebase = $this->getRule($mergebase);
         endif;
 
-        if (!is_array($mergewith)):
-            $mergewith = $this->rules[$mergewith];
-        endif;
-
-        $this->rules[$match] = array_merge($mergewith, $rule);
+        $this->rules[$match] = array_merge($mergebase, $rule);
     }
 
     public function getRule($matching)
