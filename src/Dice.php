@@ -29,45 +29,60 @@ class Dice
 
     public function addRule($match, array $rule, $mergewith = '*')
     {
-        $this->rules[ltrim(strtolower($match), '\\')] =
-            array_merge($this->rules[$mergewith], $rule);
+        $match = $this->normalizeName($match);
+
+        if ($mergewith !== '*'):
+            $mergewith = $this->normalizeName($mergewith);
+        endif;
+
+        if (!is_array($mergewith)):
+            $mergewith = $this->rules[$mergewith];
+        endif;
+
+        $this->rules[$match] = array_merge($mergewith, $rule);
     }
 
     public function getRule($matching)
     {
         // first, check for exact match
-        if (isset($this->rules[strtolower(ltrim($matching, '\\'))])):
-            return $this->rules[strtolower(ltrim($matching, '\\'))];
+        $matching = $this->normalizeName($matching);
+
+        if (isset($this->rules[$matching])):
+            return $this->rules[$matching];
         endif;
 
         // next, look for a rule where:
         foreach ($this->rules as $key => $rule):
-            if ($rule['instanceOf'] === null        // its instanceOf is not set,
-                && $key !== '*'                     // its name isn't '*',
-                && is_subclass_of($matching, $key)  // its name is a parent of arg,
+            if ($key !== '*'                        // its name isn't '*',
+                && is_subclass_of($matching, $key)  // its name is a parent class,
+                && $rule['instanceOf'] === null     // its instanceOf is not set,
                 && $rule['inherit'] === true        // and it allows inheritance
             ):
                 return $rule;
             endif;
         endforeach;
 
-        // lastly, either return a default rule or a new empty rule
-        return isset($this->rules['*']) ? $this->rules['*'] : [];
+        // if we get here, return the default rule
+        return $this->rules['*'];
     } // public function getRule($name)
 
     public function create($component, array $args = [],
                            $forceNewInstance = false, array $share = [])
     {
         if (!$forceNewInstance && isset($this->instances[$component])):
+            // we're not forcing a fresh instance at create-time,
+            // and we've already created one so just return that same one
             return $this->instances[$component];
         endif;
 
+        // so now, either we need a new instance or just don't have one stored
         if (!empty($this->cache[$component])):
+            // but we do have the function stored that creates it, so call that
             return $this->cache[$component]($args, $share);
         endif;
 
         $rule = $this->getRule($component);
-        $class = new \ReflectionClass(
+        $class = new \ReflectionClass( // get an object to inspect target class
             isset($rule['instanceOf']) ? $rule['instanceOf'] : $component
         );
         $constructor = $class->getConstructor();
@@ -129,28 +144,36 @@ class Dice
 
     private function expand($param, array $share = [])
     {
-        if (is_array($param)):
-            if (isset($param['instance'])):
-                if (is_callable($param['instance'])):
-                    $param = call_user_func($param['instance'], $this, $share);
-                else:
-                    $param = $this->create($param['instance'], [], false, $share);
-                endif;
-            endif;
+        if (!is_array($param)):
+            // doesn't need any processing
+            return $param;
+        endif;
 
+        if (!isset($param['instance'])):
+            // not a lazy instance, so recurse to catch any on deeper levels
             foreach ($param as &$key):
                 $key = $this->expand($key, $share);
             endforeach;
+            return $param;
         endif;
 
-        return $param;
+        if (is_callable($param['instance'])):
+            // it's a lazy instance formed by a function
+            return call_user_func($param['instance'], $this, $share);
+        endif;
+
+        // it's a lazy instance's class name string
+        return $this->create($param['instance'], [], false, $share);
     } // private function expand($param, array $share = [])
 
     private function getParams(\ReflectionMethod $method, array $rule)
     {
         $paramInfo = [];
         foreach ($method->getParameters() as $param):
+            // get the class hint of each param, if there is one
             $class = ($class = $param->getClass()) ? $class->name : null;
+            // determine if the param can be null, if we need to substitute a
+            // different class, or if we need to force a new instance for it
             $paramInfo[] = [
                 $class,
                 $param->allowsNull(),
@@ -200,4 +223,9 @@ class Dice
             return $parameters;
         };
     } // private function getParams(\ReflectionMethod $method, Rule $rule)
+
+    private function normalizeName($name)
+    {
+        return ltrim(strtolower($name), '\\');
+    }
 }

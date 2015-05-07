@@ -7,19 +7,19 @@ use Prophecy\Argument;
 
 class DiceSpec extends ObjectBehavior
 {
-    function it_is_initializable()
+    public function it_is_initializable()
     {
         $this->shouldBeAnInstanceOf('Dice\Dice');
     }
 
-    function it_creates_a_basic_object()
+    public function it_creates_a_basic_object()
     {
         $a = $this->create('spec\Dice\NoConstructor');
 
         $a->shouldBeAnInstanceOf('spec\Dice\NoConstructor');
     }
 
-    function it_instantiates_internal_class()
+    public function it_instantiates_internal_class()
     {
         $rule = ['constructParams' => ['.']];
         $this->addRule('DirectoryIterator', $rule);
@@ -29,7 +29,7 @@ class DiceSpec extends ObjectBehavior
         $dir->shouldBeAnInstanceOf('DirectoryIterator');
     }
 
-    function it_instantiates_extended_internal_class()
+    public function it_instantiates_extended_internal_class()
     {
         $rule = ['constructParams' => ['.']];
         $this->addRule('spec\Dice\MyDirectoryIterator', $rule);
@@ -39,7 +39,7 @@ class DiceSpec extends ObjectBehavior
         $dir->shouldBeAnInstanceOf('spec\Dice\MyDirectoryIterator');
     }
 
-    function it_instantiates_extended_internal_class_with_constructor()
+    public function it_instantiates_extended_internal_class_with_constructor()
     {
         $rule = ['constructParams' => ['.']];
         $this->addRule('spec\Dice\MyDirectoryIterator2', $rule);
@@ -49,7 +49,7 @@ class DiceSpec extends ObjectBehavior
         $dir->shouldBeAnInstanceOf('spec\Dice\MyDirectoryIterator2');
     }
 
-    function it_no_more_assign()
+    public function it_no_more_assign()
     {
         $rule = ['substitutions' => ['spec\Dice\Bar77' => ['instance' => function() {
             return \spec\Dice\Baz77::create();
@@ -62,7 +62,7 @@ class DiceSpec extends ObjectBehavior
         $foo->bar->a->shouldEqual('Z');
     }
 
-    function it_consumes_args()
+    public function it_consumes_args()
     {
         $rule = ['constructParams' => ['A']];
         $this->addRule('spec\Dice\ConsumeArgsSub', $rule);
@@ -72,7 +72,7 @@ class DiceSpec extends ObjectBehavior
         $foo->a->s->shouldEqual('A');
     }
 
-    function it_assigns_shared_named()
+    public function it_assigns_shared_named()
     {
         $rule = ['shared' => true, 'instanceOf' => function() {
             return \spec\Dice\Baz77::create();
@@ -82,12 +82,12 @@ class DiceSpec extends ObjectBehavior
         //$rule2
     }
 
-    function it_does_pdo()
+    public function it_does_pdo()
     {
         $pdo = $this->create('mysqli');
     }
 
-    function it_sets_default_rule()
+    public function it_sets_default_rule()
     {
         $defaultBehaviour = ['shared' => true, 'newInstances' => ['Foo', 'Bar']];
 
@@ -96,7 +96,7 @@ class DiceSpec extends ObjectBehavior
         // $this->getWrappedObject()->getRule('*') should == $defaultBehaviour
     }
 
-    function it_default_rule_works()
+    public function it_default_rule_works()
     {
         $defaultBehaviour = ['shared' => true];
         $this->addRule('*', $defaultBehaviour);
@@ -108,14 +108,14 @@ class DiceSpec extends ObjectBehavior
         $a1->shouldBeLike($a2);
     }
 
-    function it_creates()
+    public function it_creates()
     {
         $myobj = $this->create('stdClass');
 
         $myobj->shouldBeAnInstanceOf('stdClass');
     }
 
-    function it_cant_create_invalid()
+    public function it_cant_create_invalid()
     {
         //"can't expect default exception". Not sure why.
         $this->shouldThrow('\Exception')->duringCreate('SomeClassThatDoesNotExist');
