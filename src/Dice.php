@@ -21,10 +21,10 @@ class Dice
     private $cache = [];
     private $instances = [];
 
-    public function __construct($shareme = false)
+    public function __construct($defaultRule = [])
     {
-        if ($shareme):
-            $this->instances['Dice\Dice'] = $this;
+        if ($defaultRule):
+            $this->rules['*'] = $defaultRule;
         endif;
     }
 
