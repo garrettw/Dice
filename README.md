@@ -10,7 +10,7 @@ Dice is a minimalist Dependency Injection Container for PHP with a focus on bein
 Project Goals
 -------------
 
-1) To be lightweight and not a huge library with dozens of files (Currently Dice is just one 100 line file with only 3 classes) yet support all features (and more) offered by much more complex containers
+1) To be lightweight and not a huge library with dozens of files (Currently Dice is just 220-ish LOC in one file) yet support all features (and more) offered by much more complex containers
 
 2) To "just work". Basic functionality should work with zero configuration
 
@@ -41,7 +41,7 @@ class B {
 }
 
 require_once 'Dice.php';
-$dice = new \Dice\Dice;
+$dice = new \Dice\Dice();
 
 $a = $dice->create('A');
 
@@ -60,14 +60,16 @@ For complete documentation please see the [Dice PHP Dependency Injection contain
 PHP version compatibility
 -------------------------
 
-Dice is compatible with PHP5.4 and up, there are archived versions of Dice which supports PHP5.3 however this is no longer maintanied.
+Dice is compatible with PHP5.4 and up.
 
 
 Updates
 ------------
+14/08/2014
+* (garrettw) Made my fork focusing on code readability, simplicity, and optimization
 
 28/06/2014
-* Greatly improved efficienty. Dice is now the fastest Dependency Injection Container for PHP!
+* Greatly improved efficiency. Dice is now the fastest Dependency Injection Container for PHP!
 
 06/06/2014
 * Added support for cyclic references ( https://github.com/TomBZombie/Dice/issues/7 ). Please note this is poor design but this fix will stop the infinite loop this design creates.
