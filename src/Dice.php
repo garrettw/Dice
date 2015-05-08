@@ -30,7 +30,7 @@ class Dice
 
     public function addRule($match, array $rule, $mergebase = '*')
     {
-        $match = $this->normalizeName($match);
+        $match = ltrim(strtolower($match), '\\');
 
         if (!is_array($mergebase)):
             $mergebase = $this->getRule($mergebase);
@@ -42,7 +42,7 @@ class Dice
     public function getRule($matching)
     {
         // first, check for exact match
-        $matching = $this->normalizeName($matching);
+        $matching = ltrim(strtolower($matching), '\\');
 
         if (isset($this->rules[$matching])):
             return $this->rules[$matching];
@@ -82,40 +82,7 @@ class Dice
         $class = new \ReflectionClass( // get an object to inspect target class
             isset($rule['instanceOf']) ? $rule['instanceOf'] : $name
         );
-        $constructor = $class->getConstructor();
-        $params = $constructor ? $this->getParams($constructor, $rule) : null;
-
-        if ($rule['shared']):
-            $closure = function($args, $share)
-                use ($name, $class, $constructor, $params)
-                {
-                    if ($constructor):
-                        try {
-                            $this->instances[$name] = $class->newInstanceWithoutConstructor();
-                            $constructor->invokeArgs($this->instances[$name], $params($args, $share));
-                        } catch (\ReflectionException $r) {
-                            $this->instances[$name] = $class->newInstanceArgs($params($args, $share));
-                        }
-                    else:
-                        $this->instances[$name] = $class->newInstanceWithoutConstructor();
-                    endif;
-
-                    return $this->instances[$name];
-                }
-            ;
-        elseif ($params):
-            $closure = function($args, $share) use ($class, $params)
-                {
-                    return $class->newInstanceArgs($params($args, $share));
-                }
-            ;
-        else:
-            $closure = function($args, $share) use ($class)
-                {
-                    return new $class->name;
-                }
-            ;
-        endif;
+        $closure = $this->getClosure($name, $rule, $class);
 
         if (isset($rule['call'])):
             $closure = function ($args, $share) use ($closure, $class, $rule)
@@ -139,29 +106,43 @@ class Dice
         return $this->cache[$name]($args, $share);
     } // public function create($name, array $args = [], $forceNewInstance = false, array $share = [])
 
-    private function expand($param, array $share = [])
+    private function getClosure($name, array $rule, \ReflectionClass $class)
     {
-        if (!is_array($param)):
-            // doesn't need any processing
-            return $param;
+        $constructor = $class->getConstructor();
+        $params = $constructor ? $this->getParams($constructor, $rule) : null;
+
+        if ($rule['shared']):
+            return function($args, $share)
+                use ($name, $class, $constructor, $params)
+                {
+                    if ($constructor):
+                        try {
+                            $this->instances[$name] = $class->newInstanceWithoutConstructor();
+                            $constructor->invokeArgs($this->instances[$name], $params($args, $share));
+                        } catch (\ReflectionException $r) {
+                            $this->instances[$name] = $class->newInstanceArgs($params($args, $share));
+                        }
+                    else:
+                        $this->instances[$name] = $class->newInstanceWithoutConstructor();
+                    endif;
+
+                    return $this->instances[$name];
+                }
+            ;
         endif;
 
-        if (!isset($param['instance'])):
-            // not a lazy instance, so recurse to catch any on deeper levels
-            foreach ($param as &$value):
-                $value = $this->expand($value, $share);
-            endforeach;
-            return $param;
+        if ($params):
+            return function($args, $share) use ($class, $params)
+                {
+                    return $class->newInstanceArgs($params($args, $share));
+                }
+            ;
         endif;
 
-        if (is_callable($param['instance'])):
-            // it's a lazy instance formed by a function
-            return call_user_func($param['instance'], $this, $share);
-        endif;
+        $classname = $class->name;
 
-        // it's a lazy instance's class name string
-        return $this->create($param['instance'], [], false, $share);
-    } // private function expand($param, array $share = [])
+        return function($args, $share) use ($classname) { return new $classname; };
+    } // private function getClosure($name, array $rule, \ReflectionClass $class)
 
     private function getParams(\ReflectionMethod $method, array $rule)
     {
@@ -221,8 +202,27 @@ class Dice
         };
     } // private function getParams(\ReflectionMethod $method, Rule $rule)
 
-    private function normalizeName($name)
+    private function expand($param, array $share = [])
     {
-        return ltrim(strtolower($name), '\\');
-    }
+        if (!is_array($param)):
+            // doesn't need any processing
+            return $param;
+        endif;
+
+        if (!isset($param['instance'])):
+            // not a lazy instance, so recurse to catch any on deeper levels
+            foreach ($param as &$value):
+                $value = $this->expand($value, $share);
+            endforeach;
+            return $param;
+        endif;
+
+        if (is_callable($param['instance'])):
+            // it's a lazy instance formed by a function
+            return call_user_func($param['instance'], $this, $share);
+        endif;
+
+        // it's a lazy instance's class name string
+        return $this->create($param['instance'], [], false, $share);
+    } // private function expand($param, array $share = [])
 }
