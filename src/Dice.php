@@ -16,7 +16,7 @@ class Dice
     private $rules = ['*' => [
         'shared' => false, 'constructParams' => [], 'shareInstances' => [],
         'call' => [], 'inherit' => true, 'substitutions' => [],
-        'instanceOf' => null,
+        'instanceOf' => null, 'newInstances' => [],
     ]];
     private $cache = [];
     private $instances = [];
@@ -74,12 +74,11 @@ class Dice
         endif;
 
         $rule = $this->getRule($name);
-        $class = new \ReflectionClass( // get an object to inspect target class
-            isset($rule['instanceOf']) ? $rule['instanceOf'] : $name
-        );
+        // get an object to inspect target class
+        $class = new \ReflectionClass($rule['instanceOf'] ?: $name);
         $closure = $this->getClosure($name, $rule, $class);
 
-        if (isset($rule['call'])):
+        if ($rule['call']):
             $closure = function ($args, $share) use ($closure, $class, $rule)
                 {
                     $object = $closure($args, $share);
@@ -151,8 +150,7 @@ class Dice
                 $class,
                 $param->allowsNull(),
                 array_key_exists($class, $rule['substitutions']),
-                isset($rule['newInstances'])
-                    && in_array($class, $rule['newInstances']),
+                in_array($class, $rule['newInstances']),
             ];
         endforeach;
 

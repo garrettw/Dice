@@ -60,7 +60,7 @@ class JsonSpec extends ObjectBehavior
 "rules": [
 		{
 			"name": "A",
-			"construct": ["A", "B"]
+			"constructParams": ["A", "B"]
 		}
 	]
 }';
@@ -77,7 +77,7 @@ class JsonSpec extends ObjectBehavior
 "rules": [
 		{
 			"name": "A",
-			"substitute": {"spec\\\\Dice\\\\B": {"instance": "spec\\\\Dice\\\\C"}}
+			"substitutions": {"spec\\\\Dice\\\\B": {"instance": "spec\\\\Dice\\\\C"}}
 		}
 	]
 }';

@@ -8,8 +8,53 @@
 */
 namespace Dice\Loader;
 
-class Json {
-    private function getComponent($input) {
+class Json
+{
+    public function load($json, \Dice\Dice $dice = null)
+    {
+        if ($dice === null):
+            $dice = new \Dice\Dice;
+        endif;
+
+        if (!($map = json_decode($json))): // intentional assignment
+            throw new \Exception('Could not decode json: ' . json_last_error_msg());
+        endif;
+
+        foreach ($map->rules as $value) {
+            $rule = $dice->getRule($value->name);
+
+            isset($value->shared) and $rule['shared'] = $value->shared;
+            isset($value->inherit) and $rule['inherit'] = $value->inherit;
+            isset($value->instanceOf) and $rule['instanceOf'] = $value->instanceOf;
+
+            if (isset($value->newInstances)):
+                foreach ($value->newInstances as $ni):
+                    $rule['newInstances'][] =  $ni;
+                endforeach;
+            endif;
+
+            foreach (['call', 'constructParams', 'shareInstances'] as $param):
+                if (!isset($value->$param)) continue;
+
+                foreach ($value->$param as $val):
+                    $rule[$param][] = $this->getComponent($val);
+                endforeach;
+            endforeach;
+
+
+            if (isset($value->substitutions)):
+                foreach ($value->substitutions as $as => $use):
+                    $rule['substitutions'][$as] = $this->getComponent($use);
+                endforeach;
+            endif;
+
+            $dice->addRule($value->name, $rule);
+        }
+        return $dice;
+    }
+
+    private function getComponent($input)
+    {
         if (is_array($input)):
             foreach ($input as &$value):
                 $value = $this->getComponent($value);
@@ -26,24 +71,5 @@ class Json {
         endif;
 
         return $input;
-    }
-
-    public function load($json, \Dice\Dice $dice = null) {
-        if ($dice === null) $dice = new \Dice\Dice;
-        $map = json_decode($json);
-        if (!is_object($map)) throw new \Exception('Could not decode json: ' . json_last_error_msg());
-        foreach ($map->rules as $value) {
-            $rule = $dice->getRule($value->name);
-            if (isset($value->shared)) $rule['shared'] = $value->shared;
-            if (isset($value->inherit)) $rule['inherit'] = $value->inherit;
-            if (isset($value->call)) foreach ($value->call as $call) $rule['call'][] = $this->getComponent($call);
-            if (isset($value->instanceof)) $rule['instanceOf'] = $value->instanceof;
-            if (isset($value->newinstances)) foreach ($value->newinstances as $ni) $rule['newInstances'][] =  $ni;
-            if (isset($value->substitute)) foreach ($value->substitute as $as => $use) $rule['substitutions'][$as] = $this->getComponent($use, true);
-            if (isset($value->construct)) 	foreach ($value->construct as $child) $rule['constructParams'][] = $this->getComponent($child);
-            if (isset($value->shareinstances)) foreach ($value->shareinstances as $share) $rule['shareInstances'][] = $this->getComponent($share, false);
-            $dice->addRule($value->name, $rule);
-        }
-        return $dice;
     }
 }
