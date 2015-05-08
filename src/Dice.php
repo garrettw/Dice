@@ -28,15 +28,10 @@ class Dice
         endif;
     }
 
-    public function addRule($match, array $rule, $mergebase = '*')
+    public function addRule($match, array $rule)
     {
         $match = ltrim(strtolower($match), '\\');
-
-        if (!is_array($mergebase)):
-            $mergebase = $this->getRule($mergebase);
-        endif;
-
-        $this->rules[$match] = array_merge($mergebase, $rule);
+        $this->rules[$match] = array_merge($this->getRule($match), $rule);
     }
 
     public function getRule($matching)
