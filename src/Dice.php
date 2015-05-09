@@ -171,22 +171,24 @@ class Dice
             $parameters = [];
 
             foreach ($paramInfo as list($class, $allowsNull, $sub, $new)):
-                if ($args):
-                    for ($i = 0, $numargs = count($args); $i < $numargs; ++$i):
-                        if ($class && $args[$i] instanceof $class
-                            || ($args[$i] === null && $allowsNull)
-                        ):
-                            $parameters[] = array_splice($args, $i, 1)[0];
-                            continue 2;
-                        endif;
-                    endfor;
-                endif;
+
+                foreach ($args as $i => $val):
+                    if ($class && $val instanceof $class
+                        || ($val === null && $allowsNull)
+                    ):
+                        $parameters[] = array_splice($args, $i, 1)[0];
+                        continue 2;
+                    endif;
+                endforeach;
 
                 if ($class):
                     $parameters[] = $sub
                         ? $this->expand($rule['substitutions'][$class], $share)
                         : $this->create($class, [], $new, $share);
-                elseif ($args):
+                    continue;
+                endif;
+
+                if ($args):
                     $parameters[] = $this->expand(array_shift($args));
                 endif;
             endforeach;
