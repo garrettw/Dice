@@ -30,14 +30,14 @@ class Dice
 
     public function addRule($match, array $rule)
     {
-        $match = ltrim(strtolower($match), '\\');
-        $this->rules[$match] = array_merge($this->getRule($match), $rule);
+        $match = \ltrim(\strtolower($match), '\\');
+        $this->rules[$match] = \array_merge($this->getRule($match), $rule);
     }
 
     public function getRule($matching)
     {
         // first, check for exact match
-        $matching = ltrim(strtolower($matching), '\\');
+        $matching = \ltrim(\strtolower($matching), '\\');
 
         if (isset($this->rules[$matching])):
             return $this->rules[$matching];
@@ -46,7 +46,7 @@ class Dice
         // next, look for a rule where:
         foreach ($this->rules as $key => $rule):
             if ($key !== '*'                        // its name isn't '*',
-                && is_subclass_of($matching, $key)  // its name is a parent class,
+                && \is_subclass_of($matching, $key)  // its name is a parent class,
                 && $rule['instanceOf'] === null     // its instanceOf is not set,
                 && $rule['inherit'] === true        // and it allows inheritance
             ):
@@ -85,7 +85,7 @@ class Dice
                     foreach ($rule['call'] as $call):
                         $class->getMethod($call[0])->invokeArgs(
                             $object,
-                            call_user_func(
+                            \call_user_func(
                                 $this->getParams($class->getMethod($call[0]), $rule),
                                 $this->expand($call[1])
                             )
@@ -149,21 +149,21 @@ class Dice
             $paramInfo[] = [
                 $class,
                 $param->allowsNull(),
-                array_key_exists($class, $rule['substitutions']),
-                in_array($class, $rule['newInstances']),
+                \array_key_exists($class, $rule['substitutions']),
+                \in_array($class, $rule['newInstances']),
             ];
         endforeach;
 
         return function($args, $share = []) use ($paramInfo, $rule) {
             if ($rule['shareInstances']):
-                $share = array_merge(
+                $share = \array_merge(
                     $share,
-                    array_map([$this, 'create'], $rule['shareInstances'])
+                    \array_map([$this, 'create'], $rule['shareInstances'])
                 );
             endif;
 
             if ($share || $rule['constructParams']):
-                $args = array_merge($args,
+                $args = \array_merge($args,
                     $this->expand($rule['constructParams'], $share), $share
                 );
             endif;
@@ -176,7 +176,7 @@ class Dice
                     if ($class && $val instanceof $class
                         || ($val === null && $allowsNull)
                     ):
-                        $parameters[] = array_splice($args, $i, 1)[0];
+                        $parameters[] = \array_splice($args, $i, 1)[0];
                         continue 2;
                     endif;
                 endforeach;
@@ -189,7 +189,7 @@ class Dice
                 endif;
 
                 if ($args):
-                    $parameters[] = $this->expand(array_shift($args));
+                    $parameters[] = $this->expand(\array_shift($args));
                 endif;
             endforeach;
 
@@ -199,7 +199,7 @@ class Dice
 
     private function expand($param, array $share = [])
     {
-        if (!is_array($param)):
+        if (!\is_array($param)):
             // doesn't need any processing
             return $param;
         endif;
@@ -212,9 +212,9 @@ class Dice
             return $param;
         endif;
 
-        if (is_callable($param['instance'])):
+        if (\is_callable($param['instance'])):
             // it's a lazy instance formed by a function
-            return call_user_func($param['instance'], $this, $share);
+            return \call_user_func($param['instance'], $this, $share);
         endif;
 
         // it's a lazy instance's class name string
