@@ -170,14 +170,16 @@ class Dice
 
             foreach ($paramInfo as list($class, $allowsNull, $sub, $new)):
 
-                foreach ($args as $i => $val):
-                    if ($class && $val instanceof $class
-                        || ($val === null && $allowsNull)
-                    ):
-                        $parameters[] = \array_splice($args, $i, 1)[0];
-                        continue 2;
-                    endif;
-                endforeach;
+                if ($args):
+                    foreach ($args as $i => $val):
+                        if ($class && $val instanceof $class
+                            || ($val === null && $allowsNull)
+                        ):
+                            $parameters[] = \array_splice($args, $i, 1)[0];
+                            continue 2;
+                        endif;
+                    endforeach;
+                endif;
 
                 if ($class):
                     $parameters[] = $sub
