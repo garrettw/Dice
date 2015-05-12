@@ -163,9 +163,7 @@ class Dice
             endif;
 
             if ($share || $rule['constructParams']):
-                $args = \array_merge($args,
-                    $this->expand($rule['constructParams'], $share), $share
-                );
+                $args = \array_merge($args, $this->expand($rule['constructParams']), $share);
             endif;
 
             $parameters = [];
@@ -214,7 +212,7 @@ class Dice
 
         if (\is_callable($param['instance'])):
             // it's a lazy instance formed by a function
-            return \call_user_func($param['instance'], $this, $share);
+            return \call_user_func($param['instance'], $this);
         endif;
 
         // it's a lazy instance's class name string
