@@ -79,7 +79,7 @@ class Dice
         $closure = $this->getClosure($name, $rule, $class);
 
         if ($rule['call']):
-            $closure = function ($args, $share) use ($closure, $class, $rule)
+            $closure = function (array $args, array $share) use ($closure, $class, $rule)
                 {
                     $object = $closure($args, $share);
                     foreach ($rule['call'] as $call):
@@ -106,7 +106,7 @@ class Dice
         $params = $constructor ? $this->getParams($constructor, $rule) : null;
 
         if ($rule['shared']):
-            return function($args, $share)
+            return function(array $args, array $share)
                 use ($name, $class, $constructor, $params)
                 {
                     if ($constructor):
@@ -126,7 +126,7 @@ class Dice
         endif;
 
         if ($params):
-            return function($args, $share) use ($class, $params)
+            return function(array $args, array $share) use ($class, $params)
                 {
                     return $class->newInstanceArgs($params($args, $share));
                 }
@@ -135,7 +135,11 @@ class Dice
 
         $classname = $class->name;
 
-        return function($args, $share) use ($classname) { return new $classname; };
+        return function() use ($classname)
+            {
+                return new $classname;
+            }
+        ;
     } // private function getClosure($name, array $rule, \ReflectionClass $class)
 
     private function getParams(\ReflectionMethod $method, array $rule)
@@ -154,7 +158,7 @@ class Dice
             ];
         endforeach;
 
-        return function($args, $share = []) use ($paramInfo, $rule) {
+        return function(array $args, array $share = []) use ($paramInfo, $rule) {
             if ($rule['shareInstances']):
                 $share = \array_merge(
                     $share,
@@ -171,9 +175,9 @@ class Dice
             foreach ($paramInfo as list($class, $allowsNull, $sub, $new)):
 
                 if ($args):
-                    foreach ($args as $i => $val):
-                        if ($class && $val instanceof $class
-                            || ($val === null && $allowsNull)
+                    foreach ($args as $i => $arg):
+                        if ($class && $arg instanceof $class
+                            || ($arg === null && $allowsNull)
                         ):
                             $parameters[] = \array_splice($args, $i, 1)[0];
                             continue 2;
