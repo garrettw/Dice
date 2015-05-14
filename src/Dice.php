@@ -23,7 +23,7 @@ class Dice
 
     public function __construct($defaultRule = [])
     {
-        if ($defaultRule):
+        if (!empty($defaultRule)):
             $this->rules['*'] = $defaultRule;
         endif;
     }
@@ -56,7 +56,7 @@ class Dice
 
         // if we get here, return the default rule
         return $this->rules['*'];
-    } // public function getRule($name)
+    }
 
     public function create($name, array $args = [],
                            $forceNewInstance = false, array $share = [])
@@ -98,7 +98,7 @@ class Dice
 
         $this->cache[$name] = $closure;
         return $this->cache[$name]($args, $share);
-    } // public function create($name, array $args = [], $forceNewInstance = false, array $share = [])
+    }
 
     private function getClosure($name, array $rule, \ReflectionClass $class)
     {
@@ -140,7 +140,7 @@ class Dice
                 return new $classname;
             }
         ;
-    } // private function getClosure($name, array $rule, \ReflectionClass $class)
+    }
 
     private function getParams(\ReflectionMethod $method, array $rule)
     {
@@ -166,7 +166,7 @@ class Dice
                 );
             endif;
 
-            if ($share || $rule['constructParams']):
+            if (!empty($share) || $rule['constructParams']):
                 $args = \array_merge($args, $this->expand($rule['constructParams']), $share);
             endif;
 
@@ -174,7 +174,7 @@ class Dice
 
             foreach ($paramInfo as list($class, $allowsNull, $sub, $new)):
 
-                if ($args):
+                if (!empty($args)):
                     foreach ($args as $i => $arg):
                         if ($class && $arg instanceof $class
                             || ($arg === null && $allowsNull)
@@ -192,14 +192,14 @@ class Dice
                     continue;
                 endif;
 
-                if ($args):
+                if (!empty($args)):
                     $parameters[] = $this->expand(\array_shift($args));
                 endif;
             endforeach;
 
             return $parameters;
         };
-    } // private function getParams(\ReflectionMethod $method, Rule $rule)
+    }
 
     private function expand($param, array $share = [])
     {
@@ -223,5 +223,5 @@ class Dice
 
         // it's a lazy instance's class name string
         return $this->create($param['instance'], [], false, $share);
-    } // private function expand($param, array $share = [])
+    }
 }

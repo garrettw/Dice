@@ -18,21 +18,21 @@ class Xml {
         if ($dice === null) $dice = new \Dice\Dice;
         if (!($map instanceof \SimpleXmlElement)) $map = simplexml_load_file($map);
         foreach ($map as $key => $value) {
-            $rule = clone $dice->getRule((string) $value->name);
-            $rule->shared = ($value->shared == 'true');
-            $rule->inherit = ($value->inherit == 'false') ? false : true;
+            $rule = $dice->getRule((string) $value->name);
+            $rule['shared'] = ($value->shared == 'true');
+            $rule['inherit'] = ($value->inherit == 'false') ? false : true;
             if ($value->call) {
                 foreach ($value->call as $name => $call) {
                     $callArgs = [];
                     if ($call->params) 	foreach ($call->params->children() as $key => $param) 	$callArgs[] = $this->getComponent((string) $param, ($key == 'instance'));
-                    $rule->call[] = [(string) $call->method, $callArgs];
+                    $rule['call'][] = [(string) $call->method, $callArgs];
                 }
             }
-            if ($value->instanceof) $rule->instanceOf = (string) $value->instanceof;
-            if ($value->newinstance) foreach ($value->newinstance as $ni) $rule->newInstances[] = (string) $ni;
-            if ($value->substitute) foreach ($value->substitute as $use) 	$rule->substitutions[(string) $use->as] = $this->getComponent((string) $use->use, true);
-            if ($value->construct) 	foreach ($value->construct->children() as $child) $rule->constructParams[] = $this->getComponent((string) $child);
-            if ($value->shareinstance) foreach ($value->shareinstance as $share) $rule->shareInstances[] = $this->getComponent((string) $share, false);
+            if ($value->instanceof) $rule['instanceOf'] = (string) $value->instanceof;
+            if ($value->newinstance) foreach ($value->newinstance as $ni) $rule['newInstances'][] = (string) $ni;
+            if ($value->substitute) foreach ($value->substitute as $use) 	$rule['substitutions'][(string) $use->as] = $this->getComponent((string) $use->use, true);
+            if ($value->construct) 	foreach ($value->construct->children() as $child) $rule['constructParams'][] = $this->getComponent((string) $child);
+            if ($value->shareinstance) foreach ($value->shareinstance as $share) $rule['shareInstances'][] = $this->getComponent((string) $share, false);
             $dice->addRule((string) $value->name, $rule);
         }
     }
