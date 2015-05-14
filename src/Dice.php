@@ -79,21 +79,20 @@ class Dice
         $closure = $this->getClosure($name, $rule, $class);
 
         if ($rule['call']):
-            $closure = function (array $args, array $share) use ($closure, $class, $rule)
-                {
-                    $object = $closure($args, $share);
-                    foreach ($rule['call'] as $call):
-                        $class->getMethod($call[0])->invokeArgs(
-                            $object,
-                            \call_user_func(
-                                $this->getParams($class->getMethod($call[0]), $rule),
-                                $this->expand($call[1])
-                            )
-                        );
-                    endforeach;
-                    return $object;
-                }
-            ;
+            $closure = function(array $args, array $share) use ($closure, $class, $rule)
+            {
+                $object = $closure($args, $share);
+                foreach ($rule['call'] as $call):
+                    $class->getMethod($call[0])->invokeArgs(
+                        $object,
+                        \call_user_func(
+                            $this->getParams($class->getMethod($call[0]), $rule),
+                            $this->expand($call[1])
+                        )
+                    );
+                endforeach;
+                return $object;
+            };
         endif;
 
         $this->cache[$name] = $closure;
@@ -108,38 +107,35 @@ class Dice
         if ($rule['shared']):
             return function(array $args, array $share)
                 use ($name, $class, $constructor, $params)
-                {
-                    if ($constructor):
-                        try {
-                            $this->instances[$name] = $class->newInstanceWithoutConstructor();
-                            $constructor->invokeArgs($this->instances[$name], $params($args, $share));
-                        } catch (\ReflectionException $r) {
-                            $this->instances[$name] = $class->newInstanceArgs($params($args, $share));
-                        }
-                    else:
+            {
+                if ($constructor):
+                    try {
                         $this->instances[$name] = $class->newInstanceWithoutConstructor();
-                    endif;
+                        $constructor->invokeArgs($this->instances[$name], $params($args, $share));
+                    } catch (\ReflectionException $r) {
+                        $this->instances[$name] = $class->newInstanceArgs($params($args, $share));
+                    }
+                else:
+                    $this->instances[$name] = $class->newInstanceWithoutConstructor();
+                endif;
 
-                    return $this->instances[$name];
-                }
-            ;
+                return $this->instances[$name];
+            };
         endif;
 
         if ($params):
             return function(array $args, array $share) use ($class, $params)
-                {
-                    return $class->newInstanceArgs($params($args, $share));
-                }
-            ;
+            {
+                return $class->newInstanceArgs($params($args, $share));
+            };
         endif;
 
         $classname = $class->name;
 
         return function() use ($classname)
-            {
-                return new $classname;
-            }
-        ;
+        {
+            return new $classname;
+        };
     }
 
     private function getParams(\ReflectionMethod $method, array $rule)
@@ -158,7 +154,8 @@ class Dice
             ];
         endforeach;
 
-        return function(array $args, array $share = []) use ($paramInfo, $rule) {
+        return function(array $args, array $share = []) use ($paramInfo, $rule)
+        {
             if ($rule['shareInstances']):
                 $share = \array_merge(
                     $share,
