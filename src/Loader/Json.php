@@ -16,15 +16,16 @@ class Json
             $dice = new \Dice\Dice;
         endif;
 
-        if (!($map = json_decode($json, true))): // intentional assignment
+        if (!is_array($map = json_decode($json, true))): // intentional assignment
             throw new \Exception('Could not decode json: ' . json_last_error_msg());
         endif;
 
-        foreach ($map['rules'] as $rule) {
+        foreach ($map['rules'] as $rule):
             $name = $rule['name'];
             unset($rule['name']);
             $dice->addRule($name, $rule);
-        }
+        endforeach;
+
         return $dice;
     }
 }
