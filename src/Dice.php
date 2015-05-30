@@ -30,22 +30,15 @@ class Dice
         }
     }
 
-    public function addRule($match, array $rule, $injectSharedInst = null)
+    public function addRule($match, array $rule)
     {
-        $match = \ltrim(\strtolower($match), '\\');
-        $this->rules[$match] = \array_merge($this->getRule($match), $rule);
-
-        if (isset($rule['shared']) && $rule['shared'] === true
-            && is_object($injectSharedInst)
-        ) {
-            $this->instances[$match] = $injectSharedInst;
-        }
+        $this->rules[$this->normalizeName($match)] = \array_merge($this->getRule($match), $rule);
     }
 
     public function getRule($matching)
     {
         // first, check for exact match
-        $matching = \ltrim(\strtolower($matching), '\\');
+        $matching = $this->normalizeName($matching);
 
         if (isset($this->rules[$matching])) {
             return $this->rules[$matching];
@@ -224,5 +217,10 @@ class Dice
 
         // it's a lazy instance's class name string
         return $this->create($param['instance'], [], false, $share);
+    }
+
+    protected static function normalizeName($name)
+    {
+        return \ltrim(\strtolower($name), '\\');
     }
 }
