@@ -20,7 +20,8 @@
     },
     "require-dev": {
         "phpdocumentor/phpdocumentor": "~2.8",
-        "phpspec/phpspec": "~2.1"
+        "phpspec/phpspec": "~2.1",
+        "fabpot/php-cs-fixer": "~1.8"
     },
     "autoload": {
         "psr-4": {

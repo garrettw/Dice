@@ -2,10 +2,12 @@
 
 /**
  * @description Dice - A minimal Dependency Injection Container for PHP
+ *
  * @author      Tom Butler tom@r.je
  * @author      Garrett Whitehorn http://garrettw.net/
  * @copyright   2012-2015 Tom Butler <tom@r.je> | http://r.je/dice.html
  * @license     http://www.opensource.org/licenses/bsd-license.php  BSD License
+ *
  * @version     2.0
  */
 
@@ -13,25 +15,31 @@ namespace Dice;
 
 class Dice
 {
-    private $rules = ['*' => [
+    protected $rules = ['*' => [
         'shared' => false, 'constructParams' => [], 'shareInstances' => [],
         'call' => [], 'inherit' => true, 'substitutions' => [],
         'instanceOf' => null, 'newInstances' => [],
     ]];
-    private $cache = [];
-    private $instances = [];
+    protected $cache = [];
+    protected $instances = [];
 
     public function __construct($defaultRule = [])
     {
-        if (!empty($defaultRule)):
+        if (!empty($defaultRule)) {
             $this->rules['*'] = $defaultRule;
-        endif;
+        }
     }
 
-    public function addRule($match, array $rule)
+    public function addRule($match, array $rule, $injectSharedInst = null)
     {
         $match = \ltrim(\strtolower($match), '\\');
         $this->rules[$match] = \array_merge($this->getRule($match), $rule);
+
+        if (isset($rule['shared']) && $rule['shared'] === true
+            && is_object($injectSharedInst)
+        ) {
+            $this->instances[$match] = $injectSharedInst;
+        }
     }
 
     public function getRule($matching)
@@ -39,20 +47,20 @@ class Dice
         // first, check for exact match
         $matching = \ltrim(\strtolower($matching), '\\');
 
-        if (isset($this->rules[$matching])):
+        if (isset($this->rules[$matching])) {
             return $this->rules[$matching];
-        endif;
+        }
 
         // next, look for a rule where:
-        foreach ($this->rules as $key => $rule):
+        foreach ($this->rules as $key => $rule) {
             if ($key !== '*'                        // its name isn't '*',
                 && \is_subclass_of($matching, $key)  // its name is a parent class,
                 && $rule['instanceOf'] === null     // its instanceOf is not set,
                 && $rule['inherit'] === true        // and it allows inheritance
-            ):
+            ) {
                 return $rule;
-            endif;
-        endforeach;
+            }
+        }
 
         // if we get here, return the default rule
         return $this->rules['*'];
@@ -61,28 +69,27 @@ class Dice
     public function create($name, array $args = [],
                            $forceNewInstance = false, array $share = [])
     {
-        if (!$forceNewInstance && isset($this->instances[$name])):
+        if (!$forceNewInstance && isset($this->instances[$name])) {
             // we're not forcing a fresh instance at create-time,
             // and we've already created one so just return that same one
             return $this->instances[$name];
-        endif;
+        }
 
         // so now, either we need a new instance or just don't have one stored
-        if (!empty($this->cache[$name])):
+        if (!empty($this->cache[$name])) {
             // but we do have the function stored that creates it, so call that
             return $this->cache[$name]($args, $share);
-        endif;
+        }
 
         $rule = $this->getRule($name);
         // get an object to inspect target class
         $class = new \ReflectionClass($rule['instanceOf'] ?: $name);
         $closure = $this->getClosure($name, $rule, $class);
 
-        if ($rule['call']):
-            $closure = function(array $args, array $share) use ($closure, $class, $rule)
-            {
+        if ($rule['call']) {
+            $closure = function (array $args, array $share) use ($closure, $class, $rule) {
                 $object = $closure($args, $share);
-                foreach ($rule['call'] as $call):
+                foreach ($rule['call'] as $call) {
                     $class->getMethod($call[0])->invokeArgs(
                         $object,
                         \call_user_func(
@@ -90,58 +97,56 @@ class Dice
                             $this->expand($call[1])
                         )
                     );
-                endforeach;
+                }
+
                 return $object;
             };
-        endif;
+        }
 
         $this->cache[$name] = $closure;
+
         return $this->cache[$name]($args, $share);
     }
 
-    private function getClosure($name, array $rule, \ReflectionClass $class)
+    protected function getClosure($name, array $rule, \ReflectionClass $class)
     {
         $constructor = $class->getConstructor();
         $params = $constructor ? $this->getParams($constructor, $rule) : null;
 
         if ($rule['shared']):
-            return function(array $args, array $share)
-                use ($name, $class, $constructor, $params)
-            {
-                if ($constructor):
+            return function (array $args, array $share) use ($name, $class, $constructor, $params) {
+                if ($constructor) {
                     try {
                         $this->instances[$name] = $class->newInstanceWithoutConstructor();
                         $constructor->invokeArgs($this->instances[$name], $params($args, $share));
                     } catch (\ReflectionException $r) {
                         $this->instances[$name] = $class->newInstanceArgs($params($args, $share));
                     }
-                else:
+                } else {
                     $this->instances[$name] = $class->newInstanceWithoutConstructor();
-                endif;
+                }
 
                 return $this->instances[$name];
             };
         endif;
 
-        if ($params):
-            return function(array $args, array $share) use ($class, $params)
-            {
+        if ($params) {
+            return function (array $args, array $share) use ($class, $params) {
                 return $class->newInstanceArgs($params($args, $share));
             };
-        endif;
+        }
 
         $classname = $class->name;
 
-        return function() use ($classname)
-        {
-            return new $classname;
+        return function () use ($classname) {
+            return new $classname();
         };
     }
 
-    private function getParams(\ReflectionMethod $method, array $rule)
+    protected function getParams(\ReflectionMethod $method, array $rule)
     {
         $paramInfo = [];
-        foreach ($method->getParameters() as $param):
+        foreach ($method->getParameters() as $param) {
             // get the class hint of each param, if there is one
             $class = ($class = $param->getClass()) ? $class->name : null;
             // determine if the param can be null, if we need to substitute a
@@ -152,71 +157,70 @@ class Dice
                 \array_key_exists($class, $rule['substitutions']),
                 \in_array($class, $rule['newInstances']),
             ];
-        endforeach;
+        }
 
-        return function(array $args, array $share = []) use ($paramInfo, $rule)
-        {
-            if ($rule['shareInstances']):
+        return function (array $args, array $share = []) use ($paramInfo, $rule) {
+            if ($rule['shareInstances']) {
                 $share = \array_merge(
                     $share,
                     \array_map([$this, 'create'], $rule['shareInstances'])
                 );
-            endif;
+            }
 
-            if (!empty($share) || $rule['constructParams']):
+            if (!empty($share) || $rule['constructParams']) {
                 $args = \array_merge($args, $this->expand($rule['constructParams']), $share);
-            endif;
+            }
 
             $parameters = [];
 
-            foreach ($paramInfo as list($class, $allowsNull, $sub, $new)):
-
+            foreach ($paramInfo as list($class, $allowsNull, $sub, $new)) {
                 if (!empty($args)):
-                    foreach ($args as $i => $arg):
-                        if ($class && $arg instanceof $class
+                    foreach ($args as $i => $arg) {
+                        if ($class !== null && $arg instanceof $class
                             || ($arg === null && $allowsNull)
-                        ):
+                        ) {
                             $parameters[] = \array_splice($args, $i, 1)[0];
                             continue 2;
-                        endif;
-                    endforeach;
+                        }
+                    }
                 endif;
 
-                if ($class):
+                if ($class !== null) {
                     $parameters[] = $sub
                         ? $this->expand($rule['substitutions'][$class], $share)
                         : $this->create($class, [], $new, $share);
                     continue;
-                endif;
+                }
 
-                if (!empty($args)):
+                if (!empty($args)) {
                     $parameters[] = $this->expand(\array_shift($args));
-                endif;
-            endforeach;
+                }
+            }
 
             return $parameters;
         };
     }
 
-    private function expand($param, array $share = [])
+    protected function expand($param, array $share = [])
     {
-        if (!\is_array($param)):
+        if (!\is_array($param)) {
             // doesn't need any processing
             return $param;
-        endif;
+        }
 
-        if (!isset($param['instance'])):
+        if (!isset($param['instance'])) {
             // not a lazy instance, so recurse to catch any on deeper levels
-            foreach ($param as &$value):
+            foreach ($param as &$value) {
                 $value = $this->expand($value, $share);
-            endforeach;
-            return $param;
-        endif;
+            }
 
-        if (\is_callable($param['instance'])):
+            return $param;
+        }
+
+        if (\is_callable($param['instance'])) {
             // it's a lazy instance formed by a function
             return \call_user_func($param['instance'], $this);
-        endif;
+        }
 
         // it's a lazy instance's class name string
         return $this->create($param['instance'], [], false, $share);
