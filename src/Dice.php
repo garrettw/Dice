@@ -166,7 +166,9 @@ class Dice
 
             $parameters = [];
 
-            foreach ($paramInfo as list($class, $allowsNull, $sub, $new)) {
+            foreach ($paramInfo as $param) {
+                list($class, $allowsNull, $sub, $new) = $param;
+
                 if (!empty($args)):
                     foreach ($args as $i => $arg) {
                         if ($class !== null && $arg instanceof $class
