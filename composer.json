@@ -1,6 +1,6 @@
 {
     "name": "garrettw/dice",
-    "description": "My version of Dice, a minimalist Dependency Injection Container for PHP. Fully compatible with upstream. My additions: PSR-4 compatibility, Rule class constructor can set properties, beautified code.",
+    "description": "My version of Dice, a minimalist Dependency Injection Container for PHP. Fully compatible with upstream. My additions: PSR-2/4 compatibility, ability to set default rule, beautified code, maintained PHP 5.4 compatibility.",
     "license": "BSD-2-Clause",
     "homepage": "http://r.je/dice.html",
     "keywords": ["Dependency injection", "DI", "Dependency injection container", "DIC", "ioc"],

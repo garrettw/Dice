@@ -32,13 +32,13 @@ class Dice
 
     public function addRule($match, array $rule)
     {
-        $this->rules[$this->normalizeName($match)] = \array_merge($this->getRule($match), $rule);
+        $this->rules[self::normalizeName($match)] = \array_merge($this->getRule($match), $rule);
     }
 
     public function getRule($matching)
     {
         // first, check for exact match
-        $matching = $this->normalizeName($matching);
+        $matching = self::normalizeName($matching);
 
         if (isset($this->rules[$matching])) {
             return $this->rules[$matching];
@@ -104,9 +104,9 @@ class Dice
     protected function getClosure($name, array $rule, \ReflectionClass $class)
     {
         $constructor = $class->getConstructor();
-        $params = $constructor ? $this->getParams($constructor, $rule) : null;
+        $params = ($constructor) ? $this->getParams($constructor, $rule) : null;
 
-        if ($rule['shared']):
+        if ($rule['shared']) {
             return function (array $args, array $share) use ($name, $class, $constructor, $params) {
                 if ($constructor) {
                     try {
@@ -121,7 +121,7 @@ class Dice
 
                 return $this->instances[$name];
             };
-        endif;
+        }
 
         if ($params) {
             return function (array $args, array $share) use ($class, $params) {
@@ -142,11 +142,13 @@ class Dice
         foreach ($method->getParameters() as $param) {
             // get the class hint of each param, if there is one
             $class = ($class = $param->getClass()) ? $class->name : null;
+            $defaultValue = ($param->isDefaultValueAvailable()) ? $param->getDefaultValue() : null;
             // determine if the param can be null, if we need to substitute a
             // different class, or if we need to force a new instance for it
             $paramInfo[] = [
                 $class,
                 $param->allowsNull(),
+                $defaultValue,
                 \array_key_exists($class, $rule['substitutions']),
                 \in_array($class, $rule['newInstances']),
             ];
@@ -167,18 +169,18 @@ class Dice
             $parameters = [];
 
             foreach ($paramInfo as $param) {
-                list($class, $allowsNull, $sub, $new) = $param;
+                list($class, $allowsNull, $defaultValue, $sub, $new) = $param;
 
-                if (!empty($args)):
+                if (!empty($args)) {
                     foreach ($args as $i => $arg) {
-                        if ($class !== null && $arg instanceof $class
-                            || ($arg === null && $allowsNull)
+                        if ($class !== null
+                            && ($arg instanceof $class || ($arg === null && $allowsNull))
                         ) {
                             $parameters[] = \array_splice($args, $i, 1)[0];
                             continue 2;
                         }
                     }
-                endif;
+                }
 
                 if ($class !== null) {
                     $parameters[] = $sub
@@ -189,7 +191,10 @@ class Dice
 
                 if (!empty($args)) {
                     $parameters[] = $this->expand(\array_shift($args));
+                    continue;
                 }
+
+                $parameters[] = $defaultValue;
             }
 
             return $parameters;
@@ -214,6 +219,10 @@ class Dice
 
         if (\is_callable($param['instance'])) {
             // it's a lazy instance formed by a function
+            if (isset($param['params'])) {
+                return \call_user_func_array($param['instance'], $this->expand($param['params']));
+            }
+
             return \call_user_func($param['instance'], $this);
         }
 
