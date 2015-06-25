@@ -82,18 +82,16 @@ class DiceSpec extends ObjectBehavior
         //$rule2
     }
 
-    public function it_does_pdo()
-    {
-        $pdo = $this->create('mysqli');
-    }
-
     public function it_sets_default_rule()
     {
         $defaultBehaviour = ['shared' => true, 'newInstances' => ['Foo', 'Bar']];
 
         $this->addRule('*', $defaultBehaviour);
-
-        // $this->getWrappedObject()->getRule('*') should == $defaultBehaviour
+/*
+        if (array_diff_assoc($defaultBehaviour, $this->getWrappedObject()->getRule('*'))) {
+            throw new \Exception("can't set default rule");
+        }
+*/
     }
 
     public function it_default_rule_works()
