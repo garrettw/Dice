@@ -87,11 +87,14 @@ class DiceSpec extends ObjectBehavior
         $defaultBehaviour = ['shared' => true, 'newInstances' => ['Foo', 'Bar']];
 
         $this->addRule('*', $defaultBehaviour);
-/*
-        if (array_diff_assoc($defaultBehaviour, $this->getWrappedObject()->getRule('*'))) {
+
+        $newDefault = $this->getWrappedObject()->getRule('*');
+        if ($newDefault['shared'] != true
+            || array_diff($newDefault['newInstances'], ['Foo', 'Bar'])
+        ) {
             throw new \Exception("can't set default rule");
         }
-*/
+
     }
 
     public function it_default_rule_works()
