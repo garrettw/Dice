@@ -138,27 +138,6 @@ class DiceSpec extends ObjectBehavior
         $a->b->c->e->d->shouldBeAnInstanceOf('spec\Dice\D');
     }
 
-    public function it_creates_new_instances()
-    {
-        $rule = ['shared' => true];
-        $this->addRule('spec\Dice\B', $rule);
-
-        $rule = ['newInstances' => ['spec\Dice\B']];
-        $this->addRule('spec\Dice\A', $rule);
-
-        $a1 = $this->create('spec\Dice\A');
-        $a2 = $this->create('spec\Dice\A');
-
-        $a1->b->shouldNotBe($a2->b);
-    }
-
-    public function it_assigns_default_value()
-    {
-        $obj = $this->create('spec\Dice\MethodWithDefaultValue');
-
-        $obj->foo->shouldEqual('bar');
-    }
-
     public function it_assigns_default_null()
     {
         $rule = ['constructParams' => [['instance' => 'spec\Dice\A'], null]];
@@ -189,20 +168,6 @@ class DiceSpec extends ObjectBehavior
         $a2 = $this->create('[A]');
 
         $a1->shouldEqual($a2);
-    }
-
-    public function it_can_force_new_instance()
-    {
-        $rule = ['shared' => true];
-        $this->addRule('spec\Dice\A', $rule);
-
-        $a1 = $this->create('spec\Dice\A');
-        $a2 = $this->create('spec\Dice\A');
-        $a3 = $this->create('spec\Dice\A', array(), true);
-
-        $a1->shouldEqual($a2);
-        $a1->shouldNotEqual($a3);
-        $a2->shouldNotEqual($a3);
     }
 
     public function it_shares()

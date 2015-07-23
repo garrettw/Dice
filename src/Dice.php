@@ -17,8 +17,7 @@ class Dice
 {
     protected $rules = ['*' => [
         'shared' => false, 'constructParams' => [], 'shareInstances' => [],
-        'call' => [], 'inherit' => true, 'substitutions' => [],
-        'instanceOf' => null, 'newInstances' => [],
+        'call' => [], 'inherit' => true, 'substitutions' => [], 'instanceOf' => null,
     ]];
     protected $cache = [];
     protected $instances = [];
@@ -47,7 +46,7 @@ class Dice
         // next, look for a rule where:
         foreach ($this->rules as $key => $rule) {
             if ($key !== '*'                        // its name isn't '*',
-                && \is_subclass_of($matching, $key)  // its name is a parent class,
+                && \is_subclass_of($matching, $key) // its name is a parent class,
                 && $rule['instanceOf'] === null     // its instanceOf is not set,
                 && $rule['inherit'] === true        // and it allows inheritance
             ) {
@@ -59,25 +58,25 @@ class Dice
         return $this->rules['*'];
     }
 
-    public function create($name, array $args = [],
-                           $forceNewInstance = false, array $share = [])
+    public function create($classname, array $args = [], array $share = [])
     {
-        if (!$forceNewInstance && isset($this->instances[$name])) {
-            // we're not forcing a fresh instance at create-time,
-            // and we've already created one so just return that same one
-            return $this->instances[$name];
+        $classname = self::normalizeName($classname);
+
+        if (isset($this->instances[$classname])) {
+            // we've already created one so just return that same one
+            return $this->instances[$classname];
         }
 
         // so now, either we need a new instance or just don't have one stored
-        if (!empty($this->cache[$name])) {
+        if (!empty($this->cache[$classname])) {
             // but we do have the function stored that creates it, so call that
-            return $this->cache[$name]($args, $share);
+            return $this->cache[$classname]($args, $share);
         }
 
-        $rule = $this->getRule($name);
+        $rule = $this->getRule($classname);
         // get an object to inspect target class
-        $class = new \ReflectionClass($rule['instanceOf'] ?: $name);
-        $closure = $this->getClosure($name, $rule, $class);
+        $class = new \ReflectionClass($rule['instanceOf'] ?: $classname);
+        $closure = $this->getClosure($classname, $rule, $class);
 
         if ($rule['call']) {
             $closure = function (array $args, array $share) use ($closure, $class, $rule) {
@@ -96,9 +95,9 @@ class Dice
             };
         }
 
-        $this->cache[$name] = $closure;
+        $this->cache[$classname] = $closure;
 
-        return $this->cache[$name]($args, $share);
+        return $this->cache[$classname]($args, $share);
     }
 
     protected function getClosure($name, array $rule, \ReflectionClass $class)
@@ -150,7 +149,6 @@ class Dice
                 $param->allowsNull(),
                 $defaultValue,
                 \array_key_exists($class, $rule['substitutions']),
-                \in_array($class, $rule['newInstances']),
             ];
         }
 
@@ -169,7 +167,7 @@ class Dice
             $parameters = [];
 
             foreach ($paramInfo as $param) {
-                list($class, $allowsNull, $defaultValue, $sub, $new) = $param;
+                list($class, $allowsNull, $defaultValue, $sub) = $param;
 
                 if (!empty($args)) {
                     foreach ($args as $i => $arg) {
@@ -185,16 +183,11 @@ class Dice
                 if ($class !== null) {
                     $parameters[] = $sub
                         ? $this->expand($rule['substitutions'][$class], $share)
-                        : $this->create($class, [], $new, $share);
+                        : $this->create($class, [], $share);
                     continue;
                 }
 
-                if (!empty($args)) {
-                    $parameters[] = $this->expand(\array_shift($args));
-                    continue;
-                }
-
-                $parameters[] = $defaultValue;
+                $parameters[] = ($args) ? $this->expand(\array_shift($args)) : $defaultValue;
             }
 
             return $parameters;
@@ -227,7 +220,7 @@ class Dice
         }
 
         // it's a lazy instance's class name string
-        return $this->create($param['instance'], [], false, $share);
+        return $this->create($param['instance'], [], $share);
     }
 
     protected static function normalizeName($name)
