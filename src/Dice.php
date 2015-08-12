@@ -15,12 +15,9 @@ namespace Dice;
 
 class Dice
 {
-    protected $rules = ['*' => [
-        'shared' => false, 'constructParams' => [], 'shareInstances' => [],
-        'call' => [], 'inherit' => true, 'substitutions' => [], 'instanceOf' => null,
-    ]];
-    protected $cache = [];
-    protected $instances = [];
+    private $rules = [];
+    private $cache = [];
+    private $instances = [];
 
     public function __construct($defaultRule = [])
     {
@@ -47,22 +44,22 @@ class Dice
         foreach ($this->rules as $key => $rule) {
             if ($key !== '*'                        // its name isn't '*',
                 && \is_subclass_of($matching, $key) // its name is a parent class,
-                && $rule['instanceOf'] === null     // its instanceOf is not set,
-                && $rule['inherit'] === true        // and it allows inheritance
+                && empty($rule['instanceOf'])       // its instanceOf is not set,
+                && (empty($rule['inherit']) || $rule['inherit'] === true) // and it allows inheritance
             ) {
                 return $rule;
             }
         }
 
         // if we get here, return the default rule
-        return $this->rules['*'];
+        return (isset($this->rules['*'])) ? $this->rules['*'] : [];
     }
 
     public function create($classname, array $args = [], array $share = [])
     {
-        $classname = self::normalizeName($classname);
+        // $classname = self::normalizeName($classname); // not sure if this is needed
 
-        if (isset($this->instances[$classname])) {
+        if (!empty($this->instances[$classname])) {
             // we've already created one so just return that same one
             return $this->instances[$classname];
         }
@@ -75,19 +72,16 @@ class Dice
 
         $rule = $this->getRule($classname);
         // get an object to inspect target class
-        $class = new \ReflectionClass($rule['instanceOf'] ?: $classname);
+        $class = new \ReflectionClass(isset($rule['instanceOf']) ? $rule['instanceOf'] : $classname);
         $closure = $this->getClosure($classname, $rule, $class);
 
-        if ($rule['call']) {
+        if (isset($rule['call'])) {
             $closure = function (array $args, array $share) use ($closure, $class, $rule) {
                 $object = $closure($args, $share);
                 foreach ($rule['call'] as $call) {
-                    $class->getMethod($call[0])->invokeArgs(
-                        $object,
-                        \call_user_func(
-                            $this->getParams($class->getMethod($call[0]), $rule),
-                            $this->expand($call[1])
-                        )
+                    call_user_func_array(
+                        [$object, $call[0]],
+                        $this->getParams($class->getMethod($call[0]), $rule)->__invoke($this->expand($call[1]))
                     );
                 }
 
@@ -100,12 +94,12 @@ class Dice
         return $this->cache[$classname]($args, $share);
     }
 
-    protected function getClosure($name, array $rule, \ReflectionClass $class)
+    private function getClosure($name, array $rule, \ReflectionClass $class)
     {
         $constructor = $class->getConstructor();
         $params = ($constructor) ? $this->getParams($constructor, $rule) : null;
 
-        if ($rule['shared']) {
+        if (isset($rule['shared']) && $rule['shared'] === true) {
             return function (array $args, array $share) use ($name, $class, $constructor, $params) {
                 if ($constructor) {
                     try {
@@ -118,6 +112,8 @@ class Dice
                     $this->instances[$name] = $class->newInstanceWithoutConstructor();
                 }
 
+                $this->instances[self::normalizeNamespace($name)] = $this->instances[$name];
+
                 return $this->instances[$name];
             };
         }
@@ -128,14 +124,12 @@ class Dice
             };
         }
 
-        $classname = $class->name;
-
-        return function () use ($classname) {
-            return new $classname();
+        return function () use ($class) {
+            return new $class->name();
         };
     }
 
-    protected function getParams(\ReflectionMethod $method, array $rule)
+    private function getParams(\ReflectionMethod $method, array $rule)
     {
         $paramInfo = [];
         foreach ($method->getParameters() as $param) {
@@ -146,33 +140,36 @@ class Dice
             // different class, or if we need to force a new instance for it
             $paramInfo[] = [
                 $class,
-                $param->allowsNull(),
-                $defaultValue,
-                \array_key_exists($class, $rule['substitutions']),
+                $param,
+                isset($rule['substitutions']) && \array_key_exists($class, $rule['substitutions']),
             ];
         }
 
         return function (array $args, array $share = []) use ($paramInfo, $rule) {
-            if ($rule['shareInstances']) {
+            if (isset($rule['shareInstances'])) {
                 $share = \array_merge(
                     $share,
                     \array_map([$this, 'create'], $rule['shareInstances'])
                 );
             }
 
-            if (!empty($share) || $rule['constructParams']) {
-                $args = \array_merge($args, $this->expand($rule['constructParams']), $share);
+            if (!empty($share) || isset($rule['constructParams'])) {
+                $args = \array_merge(
+                    $args,
+                    (isset($rule['constructParams'])) ? $this->expand($rule['constructParams']) : [],
+                    $share
+                );
             }
 
             $parameters = [];
 
-            foreach ($paramInfo as $param) {
-                list($class, $allowsNull, $defaultValue, $sub) = $param;
+            foreach ($paramInfo as $pi) {
+                list($class, $param, $sub) = $pi;
 
                 if (!empty($args)) {
                     foreach ($args as $i => $arg) {
                         if ($class !== null
-                            && ($arg instanceof $class || ($arg === null && $allowsNull))
+                            && ($arg instanceof $class || ($arg === null && $param->allowsNull()))
                         ) {
                             $parameters[] = \array_splice($args, $i, 1)[0];
                             continue 2;
@@ -181,20 +178,25 @@ class Dice
                 }
 
                 if ($class !== null) {
-                    $parameters[] = $sub
+                    $parameters[] = ($sub)
                         ? $this->expand($rule['substitutions'][$class], $share)
                         : $this->create($class, [], $share);
                     continue;
                 }
 
-                $parameters[] = ($args) ? $this->expand(\array_shift($args)) : $defaultValue;
+                if ($args) {
+                    $parameters[] = $this->expand(\array_shift($args));
+                    continue;
+                }
+
+                $parameters[] = ($param->isDefaultValueAvailable()) ? $param->getDefaultValue() : null;
             }
 
             return $parameters;
         };
     }
 
-    protected function expand($param, array $share = [])
+    private function expand($param, array $share = [])
     {
         if (!\is_array($param)) {
             // doesn't need any processing
@@ -216,15 +218,20 @@ class Dice
                 return \call_user_func_array($param['instance'], $this->expand($param['params']));
             }
 
-            return \call_user_func($param['instance'], $this);
+            return \call_user_func($param['instance']);
         }
 
         // it's a lazy instance's class name string
         return $this->create($param['instance'], [], $share);
     }
 
-    protected static function normalizeName($name)
+    private static function normalizeName($name)
     {
-        return \ltrim(\strtolower($name), '\\');
+        return \strtolower(self::normalizeNamespace($name));
+    }
+
+    private static function normalizeNamespace($name)
+    {
+        return \ltrim($name, '\\');
     }
 }

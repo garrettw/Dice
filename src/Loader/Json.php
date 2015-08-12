@@ -18,8 +18,9 @@ class Json
             $dice = new \Dice\Dice();
         }
 
-        if (!is_array($map = json_decode($json, true))) { // intentional assignment
-            throw new \Exception('Could not decode json: '.json_last_error_msg());
+        $map = json_decode($json, true);
+        if (!is_array($map)) {
+            throw new \Exception('Could not decode json: ' . json_last_error_msg());
         }
 
         foreach ($map['rules'] as $rule) {
