@@ -57,8 +57,6 @@ class Dice
 
     public function create($classname, array $args = [], array $share = [])
     {
-        // $classname = self::normalizeName($classname); // not sure if this is needed
-
         if (!empty($this->instances[$classname])) {
             // we've already created one so just return that same one
             return $this->instances[$classname];
@@ -135,7 +133,6 @@ class Dice
         foreach ($method->getParameters() as $param) {
             // get the class hint of each param, if there is one
             $class = ($class = $param->getClass()) ? $class->name : null;
-            $defaultValue = ($param->isDefaultValueAvailable()) ? $param->getDefaultValue() : null;
             // determine if the param can be null, if we need to substitute a
             // different class, or if we need to force a new instance for it
             $paramInfo[] = [
@@ -184,7 +181,7 @@ class Dice
                     continue;
                 }
 
-                if ($args) {
+                if (!empty($args)) {
                     $parameters[] = $this->expand(\array_shift($args));
                     continue;
                 }
