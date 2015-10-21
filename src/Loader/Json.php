@@ -18,15 +18,24 @@ class Json
             $dice = new \Dice\Dice();
         }
 
+        if (trim($json)[0] != '{') {
+            $path = dirname(realpath($json));
+            $json = str_replace('__DIR__', $path, file_get_contents($json));
+        }
+
         $map = json_decode($json, true);
         if (!is_array($map)) {
             throw new \Exception('Could not decode json: ' . json_last_error_msg());
         }
 
-        foreach ($map['rules'] as $rule) {
-            $name = $rule['name'];
-            unset($rule['name']);
-            $dice->addRule($name, $rule);
+        if (isset($map['rules'])) {
+            foreach ($map['rules'] as $rule) {
+                $name = $rule['name'];
+                unset($rule['name']);
+                $dice->addRule($name, $rule);
+            }
+        } else {
+            array_walk($map, [$dice, 'addRule'], true);
         }
 
         return $dice;
