@@ -45,6 +45,8 @@ class Dice
 
     /**
      * Returns the rule that will be applied to the class $matching during create().
+     *
+     * @return array Ruleset that applies when instantiating the given name
      */
     public function getRule($name)
     {
@@ -72,6 +74,8 @@ class Dice
 
     /**
      * Returns a fully constructed object based on $classname using $args and $share as constructor arguments
+     *
+     * @return object
      */
     public function create($classname, array $args = [], array $share = [])
     {

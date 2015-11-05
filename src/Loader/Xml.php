@@ -31,7 +31,7 @@ class Xml
         return $this->loadV1($xml, $dice);
     }
 
-    private function doConstructParams($value, $rule)
+    private function doConstructParams(\SimpleXmlElement $value, $rule)
     {
         foreach ($value->constructParams->children() as $child) {
             $rule['constructParams'][] = $this->getComponent($child);
