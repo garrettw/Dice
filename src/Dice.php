@@ -201,7 +201,7 @@ class Dice
             if (!empty($share) || isset($rule['constructParams'])) {
                 $args = \array_merge(
                     $args,
-                    (isset($rule['constructParams'])) ? $this->expand($rule['constructParams']) : [],
+                    (isset($rule['constructParams'])) ? $this->expand($rule['constructParams'], $share) : [],
                     $share
                 );
             }
@@ -283,7 +283,7 @@ class Dice
         }
 
         // it's a lazy instance's class name string
-        return $this->create($param['instance'], [], $share);
+        return $this->create($param['instance'], $share);
     }
 
     /**
