@@ -62,7 +62,7 @@ class Dice
             if ($key !== '*'                    // it's not the default rule,
                 && \is_subclass_of($name, $key) // its name is a parent class of what we're looking for,
                 && empty($rule['instanceOf'])   // it's not a named instance,
-                && (empty($rule['inherit']) || $rule['inherit'] === true) // and it applies to subclasses
+                && (!array_key_exists('inherit', $rule) || $rule['inherit'] === true) // and it applies to subclasses
             ) {
                 return $rule;
             }
@@ -94,6 +94,13 @@ class Dice
         // Reflect the class for inspection, this should only ever be done once per class and then be cached
         $class = new \ReflectionClass(isset($rule['instanceOf']) ? $rule['instanceOf'] : $classname);
         $closure = $this->getClosure($classname, $rule, $class);
+
+        //If there are shared instances, create them and merge them with shared instances higher up the object graph
+        if (isset($rule['shareInstances'])) {
+            $closure = function(array $args, array $share) use ($closure, $rule) {
+                return $closure($args, array_merge($args, $share, array_map([$this, 'create'], $rule['shareInstances'])));
+            };
+        }
 
         // When $rule['call'] is set, wrap the closure in another closure which calls the required methods after constructing the object.
         // By putting this in a closure, the loop is never executed unless call is actually set.
@@ -188,14 +195,6 @@ class Dice
 
         // Return a closure that uses the cached information to generate the arguments for the method
         return function (array $args, array $share = []) use ($paramInfo, $rule) {
-            // If there are shared instances, create them and merge them with shared instances higher up the object graph
-            if (isset($rule['shareInstances'])) {
-                $share = \array_merge(
-                    $share,
-                    \array_map([$this, 'create'], $rule['shareInstances'])
-                );
-            }
-
             // Now merge all the possible parameters: user-defined in the rule via constructParams,
             // shared instances, and the $args argument from $dice->create()
             if (!empty($share) || isset($rule['constructParams'])) {
