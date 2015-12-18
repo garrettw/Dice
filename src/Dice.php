@@ -15,9 +15,9 @@ namespace Dice;
 
 class Dice
 {
-    private $rules = [];        // Rules which have been set using addRule()
-    private $cache = [];        // A cache of closures based on class name so each class is only reflected once
-    private $instances = [];    // Stores any instances marked as 'shared' so create() can return the same instance
+    private $rules = []; // Rules which have been set using addRule()
+    private $cache = []; // A cache of closures based on class name so each class is only reflected once
+    private $instances = []; // Stores any instances marked as 'shared' so create() can return the same instance
 
     /**
      * Constructor which allows setting a default ruleset to apply to all objects.
@@ -243,7 +243,7 @@ class Dice
             }
 
             //variadic functions will only have one argument. To account for those, append any remaining arguments to the list
-			return array_merge($parameters, $args);
+            return array_merge($parameters, $args);
         };
     }
 
