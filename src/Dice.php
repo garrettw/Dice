@@ -105,7 +105,7 @@ class Dice
         // When $rule['call'] is set, wrap the closure in another closure which calls the required methods after constructing the object.
         // By putting this in a closure, the loop is never executed unless call is actually set.
         if (isset($rule['call'])) {
-            $closure = function (array $args, array $share) use ($closure, $class, $rule) {
+            $closure = function(array $args, array $share) use ($closure, $class, $rule) {
                 // Construct the object using the original closure
                 $object = $closure($args, $share);
 
@@ -142,7 +142,7 @@ class Dice
 
         // Get a closure based on the type of object being created: shared, normal, or constructorless
         if (isset($rule['shared']) && $rule['shared'] === true) {
-            return function (array $args, array $share) use ($name, $class, $constructor, $params) {
+            return function(array $args, array $share) use ($name, $class, $constructor, $params) {
                 if ($constructor) {
                     try {
                         // Shared instance: create without calling constructor (and write to \$name and $name, see issue #68)
@@ -164,12 +164,12 @@ class Dice
 
         if ($params) {
             // This class has depenencies, call the $params closure to generate them based on $args and $share
-            return function (array $args, array $share) use ($class, $params) {
+            return function(array $args, array $share) use ($class, $params) {
                 return $class->newInstanceArgs($params($args, $share));
             };
         }
 
-        return function () use ($class) {
+        return function() use ($class) {
             // No constructor arguments, just instantiate the class
             return new $class->name();
         };
@@ -194,7 +194,7 @@ class Dice
         }
 
         // Return a closure that uses the cached information to generate the arguments for the method
-        return function (array $args, array $share = []) use ($paramInfo, $rule) {
+        return function(array $args, array $share = []) use ($paramInfo, $rule) {
             // Now merge all the possible parameters: user-defined in the rule via constructParams,
             // shared instances, and the $args argument from $dice->create()
             if (!empty($share) || isset($rule['constructParams'])) {
