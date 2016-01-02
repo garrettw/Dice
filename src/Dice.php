@@ -163,7 +163,7 @@ class Dice
         }
 
         if ($params) {
-            // This class has depenencies, call the $params closure to generate them based on $args and $share
+            // This class has dependencies, call the $params closure to generate them based on $args and $share
             return function(array $args, array $share) use ($class, $params) {
                 return $class->newInstanceArgs($params($args, $share));
             };
@@ -260,8 +260,8 @@ class Dice
 
         if (!isset($param['instance'])) {
             // not a lazy instance, so recursively search for any 'instance' keys on deeper levels
-            foreach ($param as &$value) {
-                $value = $this->expand($value, $share);
+            foreach ($param as $name => $value) {
+                $param[$name] = $this->expand($value, $share);
             }
 
             return $param;
