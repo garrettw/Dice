@@ -40,7 +40,7 @@ class Dice
             $rule = $classname;
             $classname = $temp;
         }
-        $this->rules[self::normalizeName($classname)] = \array_merge($this->getRule($classname), $rule);
+        $this->rules[self::normalizeName($classname)] = \array_merge_recursive($this->getRule($classname), $rule);
     }
 
     /**
