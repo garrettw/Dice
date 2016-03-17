@@ -15,9 +15,20 @@ namespace Dice;
 
 class Dice
 {
-    private $rules = []; // Rules which have been set using addRule()
-    private $cache = []; // A cache of closures based on class name so each class is only reflected once
-    private $instances = []; // Stores any instances marked as 'shared' so create() can return the same instance
+    /**
+     * @var array $rules Rules which have been set using addRule()
+     */
+    private $rules = [];
+
+    /**
+     * @var array $cache A cache of closures based on class name so each class is only reflected once
+     */
+    private $cache = [];
+
+    /**
+     * @var array $instances Stores any instances marked as 'shared' so create() can return the same instance
+     */
+    private $instances = [];
 
     /**
      * Constructor which allows setting a default ruleset to apply to all objects.
@@ -31,7 +42,12 @@ class Dice
 
     /**
      * Adds a rule $rule to the class $classname.
-     * See https://r.je/dice.html#example3 for $rule format.
+     *
+     * The container can be fully configured using rules provided by associative arrays.
+     * See {@link https://r.je/dice.html#example3} for a description of the rules.
+     *
+     * @param string $classname The name of the class to add the rule for
+     * @param array $rule The rule to add to it
      */
     public function addRule($classname, $rule, $swap = false)
     {
@@ -46,6 +62,7 @@ class Dice
     /**
      * Returns the rule that will be applied to the class $matching during create().
      *
+     * @param string $name The name of the ruleset to get - can be a class or not
      * @return array Ruleset that applies when instantiating the given name
      */
     public function getRule($name)
@@ -75,7 +92,10 @@ class Dice
     /**
      * Returns a fully constructed object based on $classname using $args and $share as constructor arguments
      *
-     * @return object
+     * @param string $classname The name of the class to instantiate
+     * @param array $args An array with any additional arguments to be passed into the constructor
+     * @param array $share Whether the same class instance should be passed around each time
+     * @return object A fully constructed object based on the specified input arguments
      */
     public function create($classname, array $args = [], array $share = [])
     {
@@ -132,6 +152,13 @@ class Dice
 
     /**
      * Returns a closure for creating object $name based on $rule, caching the reflection object for later use.
+     *
+     * The container can be fully configured using rules provided by associative arrays.
+     * See {@link https://r.je/dice.html#example3} for a description of the rules.
+     *
+     * @param string $name The name of the class to get the closure for
+     * @param array $rule The rule to base the instance on
+     * @return callable A closure that will create the appropriate object when called
      */
     private function getClosure($name, array $rule, \ReflectionClass $class)
     {
@@ -177,6 +204,10 @@ class Dice
 
     /**
      * Returns a closure that generates arguments for $method based on $rule and any $args passed into the closure
+     *
+     * @param ReflectionMethod $method A reflection of the method to inspect
+     * @param array $rule The ruleset to use in interpreting what the params should be
+     * @return callable A closure that uses the cached information to generate the method's arguments
      */
     private function getParams(\ReflectionMethod $method, array $rule)
     {
@@ -249,7 +280,12 @@ class Dice
 
     /**
      * Looks for 'instance' array keys in $param, and when found, returns an object based on the value.
-     * See https://r.je/dice.html#example3-1
+     * See {@link https:// r.je/dice.html#example3-1}
+     *
+     * @param string|array $param
+     * @param array $share Whether this class instance will be passed around each time
+     * @param bool $createFromString
+     * @return mixed
      */
     private function expand($param, array $share = [], $createFromString = false)
     {
