@@ -92,7 +92,7 @@ class Dice
     /**
      * Returns a fully constructed object based on $classname using $args and $share as constructor arguments
      *
-     * @param string|array $classname The name of the class to instantiate
+     * @param string $classname The name of the class to instantiate
      * @param array $args An array with any additional arguments to be passed into the constructor
      * @param array $share Whether the same class instance should be passed around each time
      * @return object A fully constructed object based on the specified input arguments
@@ -306,7 +306,7 @@ class Dice
         $args = isset($param['params']) ? $this->expand($param['params']) : [];
 
         // for ['instance' => ['className', 'methodName'] construct the instance before calling it
-        if (is_array($param['instance'])) {
+        if (\is_array($param['instance'])) {
             $param['instance'][0] = $this->expand($param['instance'][0], $share, true);
         }
 
@@ -319,8 +319,11 @@ class Dice
             return \call_user_func($param['instance']);
         }
 
-        // it's a lazy instance's class name string
-        return $this->create($param['instance'], \array_merge($args, $share));
+        if (\is_string($param['instance'])) {
+            // it's a lazy instance's class name string
+            return $this->create($param['instance'], \array_merge($args, $share));
+        }
+        // if it's not a string, it's malformed. *shrug*
     }
 
     /**
