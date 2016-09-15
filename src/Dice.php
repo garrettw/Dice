@@ -303,6 +303,8 @@ class Dice
             return $param;
         }
 
+        $args = isset($param['params']) ? $this->expand($param['params']) : [];
+
         // for ['instance' => ['className', 'methodName'] construct the instance before calling it
         if (is_array($param['instance'])) {
             $param['instance'][0] = $this->expand($param['instance'][0], $share, true);
@@ -311,14 +313,14 @@ class Dice
         if (\is_callable($param['instance'])) {
             // it's a lazy instance formed by a function. Call or return the value stored under the key 'instance'
             if (isset($param['params'])) {
-                return \call_user_func_array($param['instance'], $this->expand($param['params']));
+                return \call_user_func_array($param['instance'], $args);
             }
 
             return \call_user_func($param['instance']);
         }
 
         // it's a lazy instance's class name string
-        return $this->create($param['instance'], $share);
+        return $this->create($param['instance'], \array_merge($args, $share));
     }
 
     /**
