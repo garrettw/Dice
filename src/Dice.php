@@ -92,7 +92,7 @@ class Dice
     /**
      * Returns a fully constructed object based on $classname using $args and $share as constructor arguments
      *
-     * @param string $classname The name of the class to instantiate
+     * @param string|array $classname The name of the class to instantiate
      * @param array $args An array with any additional arguments to be passed into the constructor
      * @param array $share Whether the same class instance should be passed around each time
      * @return object A fully constructed object based on the specified input arguments
