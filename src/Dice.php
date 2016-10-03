@@ -56,6 +56,11 @@ class Dice
             $rule = $classname;
             $classname = $temp;
         }
+        if (isset($rule['instanceOf'])
+            && (!\array_key_exists('inherit', $rule) || $rule['inherit'] === true)
+        ) {
+            $rule = \array_merge_recursive($this->getRule($rule['instanceOf']), $rule);
+        }
         $this->rules[self::normalizeName($classname)] = \array_merge_recursive($this->getRule($classname), $rule);
     }
 
@@ -237,6 +242,7 @@ class Dice
             }
 
             $parameters = [];
+            $php56 = \method_exists($param, 'isVariadic');
 
             // Now find a value for each method parameter
             foreach ($paramInfo as $pi) {
@@ -263,6 +269,12 @@ class Dice
                     continue;
                 }
 
+                // Variadic functions will only have one argument. To account for those, append any remaining arguments to the list
+                if ($php56 && $param->isVariadic()) {
+                    $parameters = array_merge($parameters, $args);
+                    continue;
+                }
+
                 // There is no type hint, so take the next available value from $args (and remove from $args to stop it being reused)
                 if (!empty($args)) {
                     $parameters[] = $this->expand(\array_shift($args));
@@ -273,8 +285,7 @@ class Dice
                 $parameters[] = ($param->isDefaultValueAvailable()) ? $param->getDefaultValue() : null;
             }
 
-            //variadic functions will only have one argument. To account for those, append any remaining arguments to the list
-            return array_merge($parameters, $args);
+            return ($php56) ? $parameters : array_merge($parameters, $args);
         };
     }
 
