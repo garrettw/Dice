@@ -159,7 +159,7 @@ class Dice
      *
      * @param string $name The name of the class to get the closure for
      * @param array $rule The rule to base the instance on
-     * @return callable A closure that will create the appropriate object when called
+     * @return \Closure A closure that will create the appropriate object when called
      */
     private function getClosure($name, array $rule, \ReflectionClass $class)
     {
@@ -206,9 +206,9 @@ class Dice
     /**
      * Returns a closure that generates arguments for $method based on $rule and any $args passed into the closure
      *
-     * @param ReflectionMethod $method A reflection of the method to inspect
+     * @param \ReflectionMethod $method A reflection of the method to inspect
      * @param array $rule The ruleset to use in interpreting what the params should be
-     * @return callable A closure that uses the cached information to generate the method's arguments
+     * @return \Closure A closure that uses the cached information to generate the method's arguments
      */
     private function getParams(\ReflectionMethod $method, array $rule)
     {
@@ -334,7 +334,7 @@ class Dice
     }
 
     /**
-     *
+     * @param string $name
      */
     private static function normalizeName($name)
     {
@@ -342,7 +342,7 @@ class Dice
     }
 
     /**
-     *
+     * @param string $name
      */
     private static function normalizeNamespace($name)
     {
