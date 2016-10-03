@@ -34,10 +34,12 @@ class Json
                 unset($rule['name']);
                 $dice->addRule($name, $rule);
             }
-        } else {
-            array_walk($map, [$dice, 'addRule'], true);
+            return $dice;
         }
-
+        
+        foreach ($map as $name => $rule) {
+            $dice->addRule($name, $rule);
+        }
         return $dice;
     }
 }

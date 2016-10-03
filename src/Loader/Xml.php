@@ -98,7 +98,7 @@ class Xml
             }
 
             if ($value->shareInstances) {
-                foreach ($value->shareInstances as $share) {
+                foreach ($value->shareInstances->children() as $share) {
                     $rule['shareInstances'][] = $this->getComponent($share);
                 }
             }
@@ -125,7 +125,7 @@ class Xml
             }
 
             if (isset($value['inherit'])) {
-                $rule['inherit'] = ($value['inherit'] == 'false') ? false : true;
+                $rule['inherit'] = (bool) $value['inherit'];
             }
 
             if ($value['instanceOf']) {
