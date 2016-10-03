@@ -49,13 +49,8 @@ class Dice
      * @param string $classname The name of the class to add the rule for
      * @param array $rule The rule to add to it
      */
-    public function addRule($classname, $rule, $swap = false)
+    public function addRule($classname, $rule)
     {
-        if ($swap) {
-            $temp = $rule;
-            $rule = $classname;
-            $classname = $temp;
-        }
         if (isset($rule['instanceOf'])
             && \is_string($rule['instanceOf'])
             && (!\array_key_exists('inherit', $rule) || $rule['inherit'] === true)
