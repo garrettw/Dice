@@ -343,7 +343,7 @@ class DiceSpec extends ObjectBehavior
         $this->addRule('spec\Dice\Y', $rule);
 
         $rule = ['shared' => true, 'constructParams' => ['SecondY'],
-            'instanceOf' => 'spec\Dice\Y'
+            'instanceOf' => 'spec\Dice\Y', 'inherit' => false
         ];
         $this->addRule('[Y2]', $rule);
 

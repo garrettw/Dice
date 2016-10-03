@@ -57,6 +57,7 @@ class Dice
             $classname = $temp;
         }
         if (isset($rule['instanceOf'])
+            && \is_string($rule['instanceOf'])
             && (!\array_key_exists('inherit', $rule) || $rule['inherit'] === true)
         ) {
             $rule = \array_merge_recursive($this->getRule($rule['instanceOf']), $rule);
@@ -228,9 +229,10 @@ class Dice
                 isset($rule['substitutions']) && \array_key_exists($class, $rule['substitutions']),
             ];
         }
+        $php56 = \method_exists('ReflectionParameter', 'isVariadic'); // marginally faster than checking PHP_VERSION
 
         // Return a closure that uses the cached information to generate the arguments for the method
-        return function(array $args, array $share = []) use ($paramInfo, $rule) {
+        return function(array $args, array $share = []) use ($paramInfo, $rule, $php56) {
             // Now merge all the possible parameters: user-defined in the rule via constructParams,
             // shared instances, and the $args argument from $dice->create()
             if (!empty($share) || isset($rule['constructParams'])) {
@@ -242,7 +244,6 @@ class Dice
             }
 
             $parameters = [];
-            $php56 = \method_exists($param, 'isVariadic');
 
             // Now find a value for each method parameter
             foreach ($paramInfo as $pi) {
