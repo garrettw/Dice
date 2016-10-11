@@ -18,6 +18,13 @@ class Json
             $dice = new \Dice\Dice();
         }
 
+        if (is_array($json)) {
+            foreach ($json as $file) {
+                $dice = $this->load($file, $dice);
+            }
+            return $dice;
+        }
+
         if (trim($json)[0] != '{') {
             $path = dirname(realpath($json));
             $json = str_replace('__DIR__', $path, file_get_contents($json));
@@ -36,7 +43,7 @@ class Json
             }
             return $dice;
         }
-        
+
         foreach ($map as $name => $rule) {
             $dice->addRule($name, $rule);
         }
