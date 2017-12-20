@@ -135,11 +135,15 @@ class Dice
                     // (in php7 it will be ()() rather than __invoke)
                     $shareRule = ['shareInstances' => isset($rule['shareInstances']) ? $rule['shareInstances'] : []];
                     $callMeMaybe = isset($call[1]) ? $call[1] : [];
-                    call_user_func_array(
+                    $return = call_user_func_array(
                         [$object, $call[0]],
                         $this->getParams($class->getMethod($call[0]), $shareRule)
                             ->__invoke($this->expand($callMeMaybe))
                     );
+
+                    if (isset($call[2]) && is_callable($call[2])) {
+                        call_user_func($call[2], $return);
+                    }
                 }
 
                 return $object;
