@@ -55,9 +55,9 @@ class Dice
             && \is_string($rule['instanceOf'])
             && (!\array_key_exists('inherit', $rule) || $rule['inherit'] === true)
         ) {
-            $rule = \array_merge_recursive($this->getRule($rule['instanceOf']), $rule);
+            $rule = \array_replace_recursive($this->getRule($rule['instanceOf']), $rule);
         }
-        $this->rules[self::normalizeName($classname)] = \array_merge_recursive($this->getRule($classname), $rule);
+        $this->rules[self::normalizeName($classname)] = \array_replace_recursive($this->getRule($classname), $rule);
     }
 
     /**
