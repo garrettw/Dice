@@ -172,6 +172,14 @@ class Dice
         // This way $reflectmethod->getParameters() only ever gets called once.
         $params = ($constructor) ? $this->getParams($constructor, $rule) : null;
 
+        // PHP throws a fatal error rather than an exception when trying to
+        // instantiate an interface - detect it and throw an exception instead
+        if ($class->isInterface()) {
+            return function() {
+                throw new \InvalidArgumentException('Cannot instantiate interface');
+            };
+        }
+
         // Get a closure based on the type of object being created: shared, normal, or constructorless
         if (isset($rule['shared']) && $rule['shared'] === true) {
             return function(array $args, array $share) use ($name, $class, $constructor, $params) {
@@ -263,9 +271,14 @@ class Dice
 
                 // When nothing from $args matches but a class is type hinted, create an instance to use, using a substitution if set
                 if ($class !== null) {
-                    $parameters[] = ($sub)
-                        ? $this->expand($rule['substitutions'][$class], $share, true)
-                        : $this->create($class, [], $share);
+                    try {
+                        $parameters[] = ($sub)
+                            ? $this->expand($rule['substitutions'][$class], $share, true)
+                            : $this->create($class, [], $share);
+                    }
+                    catch (\InvalidArgumentException $e) {
+
+                    }
                     continue;
                 }
 

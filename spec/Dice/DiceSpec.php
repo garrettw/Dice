@@ -102,10 +102,10 @@ class DiceSpec extends ObjectBehavior
         $defaultBehaviour = ['shared' => true];
         $this->addRule('*', $defaultBehaviour);
 
-        $a1 = $this->create('\spec\Dice\A');
-        $a2 = $this->create('\spec\Dice\A');
+        $a1 = $this->create('spec\Dice\A');
+        $a2 = $this->create('spec\Dice\A');
 
-        $this->getRule('\spec\Dice\A')['shared']->shouldBe(true);
+        $this->getRule('spec\Dice\A')['shared']->shouldBe(true);
         $a1->shouldBeLike($a2);
     }
 
@@ -120,6 +120,13 @@ class DiceSpec extends ObjectBehavior
     {
         //"can't expect default exception". Not sure why.
         $this->shouldThrow('\Exception')->duringCreate('SomeClassThatDoesNotExist');
+    }
+
+    public function it_can_have_optional_interface()
+    {
+        $optionalInterface = $this->create('spec\Dice\OptionalInterface');
+
+        $optionalInterface->obj->shouldEqual(null);
     }
 
     /*
@@ -599,8 +606,7 @@ class DiceSpec extends ObjectBehavior
 
     /* public function it_handles_cyclic_references()
     {
-        $rule = new \Dice\Rule;
-        $rule->shared = true;
+        $rule = ['shared' => true];
         $this->addRule('spec\Dice\CyclicB', $rule);
 
         $a = $this->create('spec\Dice\CyclicA');
@@ -653,6 +659,29 @@ class DiceSpec extends ObjectBehavior
         $obj = $this->create('spec\Dice\NullScalarNested');
 
         $obj->nullScalar->string->shouldEqual(null);
+    }
+
+    public function it_may_not_inherit()
+    {
+        $rule = ['shared' => true, 'inherit' => false];
+        $this->addRule('spec\Dice\Y', $rule);
+
+        $obj1 = $this->create('spec\Dice\Y3');
+        $obj2 = $this->create('spec\Dice\Y3');
+
+        $obj1->shouldNotEqual($obj2);
+    }
+
+    public function it_can_override_shared()
+    {
+        //Set everything to shared by default
+        $this->addRule('*', ['shared' => true]);
+        $this->addRule('spec\Dice\A', ['shared' => false]);
+
+        $a1 = $this->create('spec\Dice\A');
+        $a2 = $this->create('spec\Dice\A');
+
+        $a1->shouldNotEqual($a2);
     }
 }
 
@@ -975,3 +1004,12 @@ class Y1 {
 }
 
 class Y3 extends Y {}
+
+class OptionalInterface
+{
+    public $obj;
+
+    public function __construct(TestInterface $obj = null) {
+        $this->obj = $obj;
+    }
+}

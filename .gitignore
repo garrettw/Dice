@@ -1,2 +1,2 @@
-#phpunit bootstrap
-tests/.bootstrap.php
+vendor/
+composer.lock
