@@ -5,10 +5,10 @@
  *
  * @author      Tom Butler tom@r.je
  * @author      Garrett Whitehorn http://garrettw.net/
- * @copyright   2012-2015 Tom Butler <tom@r.je> | https://r.je/dice.html
+ * @copyright   2012-2018 Tom Butler <tom@r.je> | https://r.je/dice.html
  * @license     http://www.opensource.org/licenses/bsd-license.php  BSD License
  *
- * @version     2.0
+ * @version     3.0
  */
 
 namespace Dice;
@@ -59,6 +59,13 @@ class Dice
             && (!\array_key_exists('inherit', $rule) || $rule['inherit'] === true)
         ) {
             $rule = \array_replace_recursive($this->getRule($rule['instanceOf']), $rule);
+        }
+
+        // Allow substitutions rules to be defined with a leading a slash
+        if (isset($rule['substitutions'])) {
+            foreach($rule['substitutions'] as $key => $value) {
+                $rule[ltrim($key,  '\\')] = $value;
+            }
         }
         $this->rules[self::normalizeName($classname)] = \array_replace_recursive($this->getRule($classname), $rule);
     }
