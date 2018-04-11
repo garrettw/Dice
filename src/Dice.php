@@ -15,6 +15,9 @@ namespace Dice;
 
 class Dice
 {
+    const CONSTANT = 'Dice::CONSTANT';
+	const INSTANCE = 'Dice::INSTANCE';
+
     /**
      * @var array $rules Rules which have been set using addRule()
      */
@@ -58,6 +61,19 @@ class Dice
             $rule = \array_replace_recursive($this->getRule($rule['instanceOf']), $rule);
         }
         $this->rules[self::normalizeName($classname)] = \array_replace_recursive($this->getRule($classname), $rule);
+    }
+
+    /**
+     * Add rules as array. Useful for JSON loading
+     * $dice->addRules(json_decode(file_get_contents('foo.json'));
+     *
+     * @param array Rules in a single array [name => $rule] format
+     */
+    public function addRules(array $rules)
+    {
+        foreach ($rules as $name => $rule) {
+            $this->addRule($name, $rule);
+        }
     }
 
     /**
@@ -303,11 +319,11 @@ class Dice
     }
 
     /**
-     * Looks for 'instance' array keys in $param, and when found, returns an object based on the value.
+     * Looks for Dice::INSTANCE or Dice::CONSTANT array keys in $param, and when found, returns an object based on the value.
      * See {@link https:// r.je/dice.html#example3-1}
      *
      * @param string|array $param
-     * @param array $share Whether this class instance will be passed around each time
+     * @param array $share Array of instances from 'shareInstances', required for calls to `create`
      * @param bool $createFromString
      * @return mixed
      */
@@ -318,8 +334,12 @@ class Dice
             return (is_string($param) && $createFromString) ? $this->create($param) : $param;
         }
 
-        if (!isset($param['instance'])) {
-            // not a lazy instance, so recursively search for any 'instance' keys on deeper levels
+        if (isset($param[self::CONSTANT])) {
+            return constant($param[self::CONSTANT]);
+        }
+
+        if (!isset($param[self::INSTANCE])) {
+            // not a lazy instance, so recursively search for any self::INSTANCE keys on deeper levels
             foreach ($param as $name => $value) {
                 $param[$name] = $this->expand($value, $share);
             }
@@ -327,25 +347,27 @@ class Dice
             return $param;
         }
 
+        // Check for 'params' which allows parameters to be sent to the instance when it's created
+        // Either as a callback method or to the constructor of the instance
         $args = isset($param['params']) ? $this->expand($param['params']) : [];
 
-        // for ['instance' => ['className', 'methodName'] construct the instance before calling it
-        if (\is_array($param['instance'])) {
-            $param['instance'][0] = $this->expand($param['instance'][0], $share, true);
+        // for [self::INSTANCE => ['className', 'methodName'] construct the instance before calling it
+        if (\is_array($param[self::INSTANCE])) {
+            $param[self::INSTANCE][0] = $this->expand($param[self::INSTANCE][0], $share, true);
         }
 
-        if (\is_callable($param['instance'])) {
-            // it's a lazy instance formed by a function. Call or return the value stored under the key 'instance'
+        if (\is_callable($param[self::INSTANCE])) {
+            // it's a lazy instance formed by a function. Call or return the value stored under the key self::INSTANCE
             if (isset($param['params'])) {
-                return \call_user_func_array($param['instance'], $args);
+                return \call_user_func_array($param[self::INSTANCE], $args);
             }
 
-            return \call_user_func($param['instance']);
+            return \call_user_func($param[self::INSTANCE]);
         }
 
-        if (\is_string($param['instance'])) {
+        if (\is_string($param[self::INSTANCE])) {
             // it's a lazy instance's class name string
-            return $this->create($param['instance'], \array_merge($args, $share));
+            return $this->create($param[self::INSTANCE], \array_merge($args, $share));
         }
         // if it's not a string, it's malformed. *shrug*
     }

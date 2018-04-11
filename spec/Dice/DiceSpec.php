@@ -7,6 +7,9 @@ use Prophecy\Argument;
 
 class DiceSpec extends ObjectBehavior
 {
+    const CONSTANT = 'Dice::CONSTANT';
+	const INSTANCE = 'Dice::INSTANCE';
+
     public function it_is_initializable()
     {
         $this->shouldBeAnInstanceOf('Dice\Dice');
@@ -51,7 +54,7 @@ class DiceSpec extends ObjectBehavior
 
     public function it_no_more_assign()
     {
-        $rule = ['substitutions' => ['spec\Dice\Bar77' => ['instance' => function() {
+        $rule = ['substitutions' => ['spec\Dice\Bar77' => [self::INSTANCE => function() {
             return \spec\Dice\Baz77::create();
         }]]];
         $this->addRule('spec\Dice\Foo77', $rule);
@@ -147,7 +150,7 @@ class DiceSpec extends ObjectBehavior
 
     public function it_assigns_default_null()
     {
-        $rule = ['constructParams' => [['instance' => 'spec\Dice\A'], null]];
+        $rule = ['constructParams' => [[self::INSTANCE => 'spec\Dice\A'], null]];
         $this->addRule('spec\Dice\MethodWithDefaultNull', $rule);
 
         $obj = $this->create('spec\Dice\MethodWithDefaultNull');
@@ -199,7 +202,7 @@ class DiceSpec extends ObjectBehavior
 
     public function it_substitutes_text()
     {
-        $rule = ['substitutions' => ['spec\Dice\B' => ['instance' => 'spec\Dice\ExtendedB']]];
+        $rule = ['substitutions' => ['spec\Dice\B' => [self::INSTANCE => 'spec\Dice\ExtendedB']]];
         $this->addRule('spec\Dice\A', $rule);
 
         $a = $this->create('spec\Dice\A');
@@ -209,7 +212,7 @@ class DiceSpec extends ObjectBehavior
 
     public function it_substitutes_mixed_case_text()
     {
-        $rule = ['substitutions' => ['spec\Dice\B' => ['instance' => 'spec\Dice\exTenDedb']]];
+        $rule = ['substitutions' => ['spec\Dice\B' => [self::INSTANCE => 'spec\Dice\exTenDedb']]];
         $this->addRule('spec\Dice\A', $rule);
 
         $a = $this->create('spec\Dice\A');
@@ -220,7 +223,7 @@ class DiceSpec extends ObjectBehavior
     public function it_substitutes_callback()
     {
         $injection = $this->getWrappedObject();
-        $rule = ['substitutions' => ['spec\Dice\B' => ['instance' =>
+        $rule = ['substitutions' => ['spec\Dice\B' => [self::INSTANCE =>
             function() use ($injection) {
                 return $injection->create('spec\Dice\ExtendedB');
             }
@@ -247,7 +250,7 @@ class DiceSpec extends ObjectBehavior
     public function it_substitutes_string()
     {
         $rule = ['substitutions' => ['spec\Dice\B' =>
-            ['instance' => 'spec\Dice\ExtendedB']
+            [self::INSTANCE => 'spec\Dice\ExtendedB']
         ]];
         $this->addRule('spec\Dice\A', $rule);
 
@@ -355,7 +358,7 @@ class DiceSpec extends ObjectBehavior
         $this->addRule('[Y2]', $rule);
 
         $rule = ['constructParams' =>
-            [['instance' => 'spec\Dice\Y'], ['instance' => '[Y2]']]
+            [[self::INSTANCE => 'spec\Dice\Y'], [self::INSTANCE => '[Y2]']]
         ];
         $this->addRule('spec\Dice\HasTwoSameDependencies', $rule);
 
@@ -374,7 +377,7 @@ class DiceSpec extends ObjectBehavior
         //echo $y2->name;
         $y2->shouldBeAnInstanceOf('spec\Dice\Y3');
 
-        $rule = ['constructParams' => [['instance' => '$Y2']]];
+        $rule = ['constructParams' => [[self::INSTANCE => '$Y2']]];
         $this->addRule('spec\Dice\Y1', $rule);
 
         $y1 = $this->create('spec\Dice\Y1');
@@ -386,7 +389,7 @@ class DiceSpec extends ObjectBehavior
         $rule = ['instanceOf' => 'spec\Dice\ExtendedB'];
         $this->addRule('$B', $rule);
 
-        $rule = ['constructParams' => [['instance' => '$B']]];
+        $rule = ['constructParams' => [[self::INSTANCE => '$B']]];
         $this->addRule('spec\Dice\A', $rule);
 
         $a = $this->create('spec\Dice\A');
@@ -399,7 +402,7 @@ class DiceSpec extends ObjectBehavior
         $rule = ['instanceOf' => 'spec\Dice\ExtendedB'];
         $this->addRule('$B', $rule);
 
-        $rule = ['substitutions' => ['spec\Dice\B' => ['instance' => '$B']]];
+        $rule = ['substitutions' => ['spec\Dice\B' => [self::INSTANCE => '$B']]];
         $this->addRule('spec\Dice\A', $rule);
 
         $a = $this->create('spec\Dice\A');
@@ -415,7 +418,7 @@ class DiceSpec extends ObjectBehavior
         $rule = ['instanceOf' => 'spec\Dice\Y', 'constructParams' => ['second']];
         $this->addRule('$YB', $rule);
 
-        $rule = ['constructParams' => [['instance' => '$YA'], ['instance' => '$YB']]];
+        $rule = ['constructParams' => [[self::INSTANCE => '$YA'], [self::INSTANCE => '$YB']]];
         $this->addRule('spec\Dice\HasTwoSameDependencies', $rule);
 
         $twodep = $this->create('spec\Dice\HasTwoSameDependencies');
@@ -447,7 +450,7 @@ class DiceSpec extends ObjectBehavior
 
     public function it_calls_with_instance()
     {
-        $rule = ['call' => [['callMe', [['instance' => 'spec\Dice\A']]]]];
+        $rule = ['call' => [['callMe', [[self::INSTANCE => 'spec\Dice\A']]]]];
         $this->addRule('spec\Dice\TestCall3', $rule);
 
         $object = $this->create('spec\Dice\TestCall3');
@@ -579,7 +582,7 @@ class DiceSpec extends ObjectBehavior
 
     public function it_applies_rules_to_namespaces_with_slash()
     {
-        $rule = ['substitutions' => ['spec\Dice\B' => ['instance' => 'spec\Dice\ExtendedB']]];
+        $rule = ['substitutions' => ['spec\Dice\B' => [self::INSTANCE => 'spec\Dice\ExtendedB']]];
         $this->addRule('\spec\Dice\A', $rule);
 
         $a = $this->create('\spec\Dice\A');
@@ -682,6 +685,17 @@ class DiceSpec extends ObjectBehavior
         $a2 = $this->create('spec\Dice\A');
 
         $a1->shouldNotEqual($a2);
+    }
+
+    public function it_passes_constant_string()
+    {
+        $this->addRule('spec\Dice\CheckConstructorArgs',
+			['constructParams' => [[self::CONSTANT => '\PDO::FETCH_ASSOC']]]
+		);
+
+		$obj = $this->create('spec\Dice\CheckConstructorArgs');
+
+		$obj->arg1->shouldEqual(\PDO::FETCH_ASSOC);
     }
 }
 
@@ -1012,4 +1026,12 @@ class OptionalInterface
     public function __construct(TestInterface $obj = null) {
         $this->obj = $obj;
     }
+}
+
+class CheckConstructorArgs {
+	public $arg1;
+
+	public function __construct($arg1) {
+		$this->arg1 = $arg1;
+	}
 }
