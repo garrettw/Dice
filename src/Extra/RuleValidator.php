@@ -19,7 +19,6 @@ class RuleValidator
         $this->checkNumericArray($rule, 'constructParams');
         $this->checkNumericArray($rule, 'shareInstances');
         $this->checkNumericArray($rule, 'call');
-        $this->checkAssocArray($rule, 'call');
 
         $this->dice->addRule($name, $rule);
     }

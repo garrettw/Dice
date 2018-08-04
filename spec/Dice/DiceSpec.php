@@ -259,6 +259,16 @@ class DiceSpec extends ObjectBehavior
         $a->b->shouldBeAnInstanceOf('spec\Dice\ExtendedB');
     }
 
+    public function it_substitutes_with_function_call()
+    {
+        $rule = ['substitutions' => ['spec\Dice\TestInterface' => [self::INSTANCE => ['spec\Dice\Foo2', 'bar']]]];
+        $this->addRule('spec\Dice\Foo', $rule);
+
+        $a = $this->create('spec\Dice\Foo');
+
+        $a->bar->shouldBeAnInstanceOf('spec\Dice\InterfaceTestClass');
+    }
+
     public function it_constructs_with_params()
     {
         $rule = ['constructParams' => ['foo', 'bar']];
@@ -830,6 +840,19 @@ class Foo77 {
     public $bar;
     public function __construct(Bar77 $bar) {
         $this->bar = $bar;
+    }
+}
+
+class Foo {
+ 	public $bar;
+ 	public function __construct(TestInterface $bar) {
+ 		$this->bar = $bar;
+	}
+}
+
+class Foo2 {
+    public function bar() {
+        return new InterfaceTestClass;
     }
 }
 
