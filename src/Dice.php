@@ -74,7 +74,7 @@ class Dice
      * Add rules as array. Useful for JSON loading
      * $dice->addRules(json_decode(file_get_contents('foo.json'));
      *
-     * @param array Rules in a single array [name => $rule] format
+     * @param array $rules Rules in a single array [name => $rule] format
      */
     public function addRules(array $rules)
     {
@@ -140,7 +140,7 @@ class Dice
         $constructor = $class->getConstructor();
         // Create parameter-generating closure in order to cache reflection on the parameters.
         // This way $reflectmethod->getParameters() only ever gets called once.
-        $params = ($constructor) ? $this->getParams($constructor, $rule) : null;
+        $params = (isset($constructor)) ? $this->getParams($constructor, $rule) : null;
 
         $closure = $this->getClosure($class, $params);
 
@@ -149,7 +149,7 @@ class Dice
             $closure = function(array $args, array $share) use ($classname, $class, $constructor, $params, $closure) {
                 if ($class->isInternal() === true) {
                     $this->instances[$classname] = $closure($args, $share);
-                } else if ($constructor) {
+                } else if (isset($constructor)) {
                     try {
                         // Shared instance: create without calling constructor (and write to \$classname and $classname, see issue #68)
                         $this->instances[$classname] = $class->newInstanceWithoutConstructor();
@@ -370,7 +370,7 @@ class Dice
 
         if (\is_callable($param[self::INSTANCE])) {
             // it's a lazy instance formed by a function. Call or return the value stored under the key self::INSTANCE
-            if (isset($param['params'])) {
+            if (isset($param['params']) && is_array($args)) {
                 return \call_user_func_array($param[self::INSTANCE], $args);
             }
 
@@ -379,7 +379,7 @@ class Dice
 
         if (\is_string($param[self::INSTANCE])) {
             // it's a lazy instance's class name string
-            return $this->create($param[self::INSTANCE], \array_merge($args, $share));
+            return $this->create($param[self::INSTANCE], (is_array($args)) ? \array_merge($args, $share) : $share);
         }
         // if it's not a string, it's malformed. *shrug*
     }
