@@ -64,7 +64,7 @@ class Dice
         // Allow substitutions rules to be defined with a leading a slash
         if (isset($rule['substitutions'])) {
             foreach ($rule['substitutions'] as $key => $value) {
-                $rule[ltrim($key,  '\\')] = $value;
+                $rule[self::normalizeNamespace($key)] = $value;
             }
         }
         $this->rules[self::normalizeName($classname)] = \array_replace_recursive($this->getRule($classname), $rule);
