@@ -16,7 +16,7 @@ namespace Dice;
 class Dice
 {
     const CONSTANT = 'Dice::CONSTANT';
-	const INSTANCE = 'Dice::INSTANCE';
+    const INSTANCE = 'Dice::INSTANCE';
 
     /**
      * @var array $rules Rules which have been set using addRule()
@@ -63,7 +63,7 @@ class Dice
 
         // Allow substitutions rules to be defined with a leading a slash
         if (isset($rule['substitutions'])) {
-            foreach($rule['substitutions'] as $key => $value) {
+            foreach ($rule['substitutions'] as $key => $value) {
                 $rule[ltrim($key,  '\\')] = $value;
             }
         }
@@ -171,7 +171,7 @@ class Dice
         //If there are shared instances, create them and merge them with shared instances higher up the object graph
         if (isset($rule['shareInstances'])) {
             $closure = function(array $args, array $share) use ($closure, $rule) {
-                foreach($rule['shareInstances'] as $instance) {
+                foreach ($rule['shareInstances'] as $instance) {
                     $share[] = $this->create($instance, [], $share);
                 }
                 return $closure($args, $share);
@@ -285,7 +285,8 @@ class Dice
                 list($class, $param, $sub) = $pi;
 
                 // First, loop through $args and see if each value can match the current parameter based on type hint
-                if (!empty($args)) { // This if statement actually gives a ~10% speed increase when $args isn't set
+                // This if statement actually gives a ~10% speed increase when $args isn't set
+                if (!empty($args)) {
                     foreach ($args as $i => $arg) {
                         if ($class !== null
                             && ($arg instanceof $class || ($arg === null && $param->allowsNull()))
@@ -303,9 +304,8 @@ class Dice
                         $parameters[] = ($sub)
                             ? $this->expand($rule['substitutions'][$class], $share, true)
                             : $this->create($class, [], $share);
-                    }
-                    catch (\InvalidArgumentException $e) {
-
+                    } catch (\InvalidArgumentException $e) {
+                        // Squash this exception
                     }
                     continue;
                 }
